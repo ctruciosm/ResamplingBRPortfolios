@@ -25,7 +25,7 @@ nassets <- 10
 ntotal <- 60
 nboot <- 500
 w = w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = w_comb_bootparam = w_comb_boot = matrix(NA, ncol = nassets, nrow = MC)
-option = "unconstrained_mvp_"  # "short_sales_constrains_", "bounded_"
+option = "unc_mvp_"  # "short_sales_", "bounded_"
 sp <- setting_parameters(p = nassets) 
 for (i in 1:MC) {
   print(sprintf("Monte Carlo iterarion %d", i))
@@ -46,13 +46,13 @@ for (i in 1:MC) {
   w_comb_boot[i,] <- combining_bootstrap(returns_sim, B = nboot) # Combining Resampling
 }
 
-write.csv(w, paste0(option,"w.csv"))
-write.csv(w_estim, paste0(option,"w_estim.csv"))
-write.csv(w_bootparam, paste0(option,"w_bootparam.csv"))
-write.csv(w_boot, paste0(option,"w_boot.csv"))
-write.csv(w_factor_bootparam, paste0(option,"w_factor_bootparam.csv"))
-write.csv(w_factor_boot, paste0(option,"w_factor_boot.csv"))
-write.csv(w_comb_bootparam, paste0(option,"w_comb_bootparam.csv"))
-write.csv(w_comb_boot, paste0(option,"w_comb_boot.csv"))
+write.csv(w, paste0(option,"w_", nassets, ".csv"))
+write.csv(w_estim, paste0(option,"w_estim", nassets,".csv"))
+write.csv(w_bootparam, paste0(option,"w_bootparam", nassets, ".csv"))
+write.csv(w_boot, paste0(option,"w_boot", nassets, ".csv"))
+write.csv(w_factor_bootparam, paste0(option,"w_factor_bootparam", nassets, ".csv"))
+write.csv(w_factor_boot, paste0(option,"w_factor_boot", nassets, ".csv"))
+write.csv(w_comb_bootparam, paste0(option,"w_comb_bootparam", nassets, ".csv"))
+write.csv(w_comb_boot, paste0(option,"w_comb_boot", nassets, ".csv"))
 
 
