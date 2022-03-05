@@ -16,6 +16,7 @@ nboot <- 500
 w = w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = matrix(NA, ncol = nassets, nrow = MC)
 
 sp <- setting_parameters(p = nassets) 
+
 for (i in 1:MC) {
   set.seed(i + 123)
   data_sim <- dgp(nobs = ntotal, p = nassets, set_par = sp)
