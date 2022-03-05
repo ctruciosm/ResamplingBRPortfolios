@@ -5,7 +5,8 @@
 rm(list = ls())
 library(mvtnorm)
 library(RiskPortfolios)
-source("auxiliary_functions.R")
+source("DGP.R")
+source("Resampling_Techniques.R")
 
 # Setup
 MC <- 1000
