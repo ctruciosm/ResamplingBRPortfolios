@@ -2,12 +2,6 @@
 ###  Data Generating Process  ###
 #################################
 
-# Setting Parameters
-library(tidyr)
-library(readxl)
-library(stringr)
-library(dplyr)
-
 ## Trying to mimic real monthly returns
 setting_parameters <- function(p) {
   # Load Monthly returns
