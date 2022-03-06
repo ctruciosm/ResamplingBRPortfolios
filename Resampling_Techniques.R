@@ -172,10 +172,3 @@ combining_bootstrap <- function(x, B = 500) {
   return(w = apply(w_boot, 2, mean))
 }
 
-
-testar <- tryCatch({
-  log(rnorm(1))
-}, 
-warning = function(w) 1, 
-error = function(e) 1)
-testar
