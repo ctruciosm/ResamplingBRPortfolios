@@ -19,14 +19,14 @@ source("Auxiliary_Functions.R")
 source("Resampling_Techniques.R")
 
 # Setup
-MC <- 2
+MC <- 1000
 nassets <- 10
 ntotal <- 60
 nboot <- 500
 w = w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = w_comb_bootparam = w_comb_boot = matrix(NA, ncol = nassets, nrow = MC)
 option = "unc_mvp_"  # "short_sales_", "bounded_"
 sp <- setting_parameters(p = nassets) 
-for (i in 1:MC) {
+for (i in 82:MC) {
   print(sprintf("Monte Carlo iterarion %d", i))
   set.seed(i + 123)
   data_sim <- dgp(nobs = ntotal, p = nassets, set_par = sp)
