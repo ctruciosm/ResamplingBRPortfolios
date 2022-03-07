@@ -20,7 +20,7 @@ source("Auxiliary_Functions.R")
 source("Resampling_Techniques.R")
 
 # Setup
-MC <- 1000
+MC <- 2
 nassets <- 5
 ntotal <- 60
 nboot <- 500
@@ -47,22 +47,22 @@ for (i in 1:MC) {
   w_comb_boot[i,] <- combining_bootstrap(returns_sim, B = nboot) # Combining Resampling
 }
 
-
-if (dir.exists(paste0("MC_d", nassets, "_n", ntotal))) {
-  unlink(paste0("MC_d", nassets, "_n", ntotal), recursive = TRUE)
-  dir.create(file.path(getwd(), paste0("MC_d", nassets, "_n", ntotal)), recursive = TRUE)
+newfolder <- paste0("MC_d", nassets, "_n", ntotal)
+if (dir.exists(newfolder)) {
+  unlink(newfolder , recursive = TRUE)
+  dir.create(file.path(getwd(), newfolder), recursive = TRUE)
 } else{
-  dir.create(file.path(getwd(), paste0("MC_d", nassets, "_n", ntotal)), recursive = TRUE)
+  dir.create(file.path(getwd(), newfolder), recursive = TRUE)
 }
 
-write.csv(w, paste0(option,"w_", nassets, "_", ntotal, ".csv"))
-write.csv(w_estim, paste0(option,"w_estim", nassets, "_", ntotal, ".csv"))
-write.csv(w_bootparam, paste0(option,"w_bootparam", nassets, "_", ntotal, ".csv"))
-write.csv(w_boot, paste0(option,"w_boot", nassets, "_", ntotal, ".csv"))
-write.csv(w_factor_bootparam, paste0(option,"w_factor_bootparam", nassets, "_", ntotal, ".csv"))
-write.csv(w_factor_boot, paste0(option,"w_factor_boot", nassets, "_", ntotal, ".csv"))
-write.csv(w_comb_bootparam, paste0(option,"w_comb_bootparam", nassets, "_", ntotal, ".csv"))
-write.csv(w_comb_bootparam2, paste0(option,"w_comb_bootparam2", nassets, "_", ntotal, ".csv"))
-write.csv(w_comb_boot, paste0(option,"w_comb_boot", nassets, "_", ntotal, ".csv"))
+write.csv(w, paste0(newfolder, "/", option,"w_", nassets, "_", ntotal, ".csv"))
+write.csv(w_estim, paste0(newfolder, "/", option,"w_estim", nassets, "_", ntotal, ".csv"))
+write.csv(w_bootparam, paste0(newfolder, "/", option,"w_bootparam", nassets, "_", ntotal, ".csv"))
+write.csv(w_boot, paste0(newfolder, "/", option,"w_boot", nassets, "_", ntotal, ".csv"))
+write.csv(w_factor_bootparam, paste0(newfolder, "/", option,"w_factor_bootparam", nassets, "_", ntotal, ".csv"))
+write.csv(w_factor_boot, paste0(newfolder, "/", option,"w_factor_boot", nassets, "_", ntotal, ".csv"))
+write.csv(w_comb_bootparam, paste0(newfolder, "/", option,"w_comb_bootparam", nassets, "_", ntotal, ".csv"))
+write.csv(w_comb_bootparam2, paste0(newfolder, "/", option,"w_comb_bootparam2", nassets, "_", ntotal, ".csv"))
+write.csv(w_comb_boot, paste0(newfolder, "/", option,"w_comb_boot", nassets, "_", ntotal, ".csv"))
 
 
