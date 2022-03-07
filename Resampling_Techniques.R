@@ -13,12 +13,13 @@ michaud_parametric_bootstrap <- function(x, B = 500) {
     returns_boot <- rmvnorm(nobs, mu_hat, Sigma_hat)
     mu_boot_hat <- apply(returns_boot, 2, mean)
     Sigma_boot_hat <- tryCatch({cov(returns_boot)}, warning = function(w) 1, error = function(e) 1)
-    while (!is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | !all(eigen(Sigma_boot_hat)$values > 0)) {
+    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
+    while (any(is.na(w_boot[j, ])) | !is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       returns_boot <- rmvnorm(nobs, mu_hat, Sigma_hat)
       mu_boot_hat <- apply(returns_boot, 2, mean)
       Sigma_boot_hat <- tryCatch({cov(returns_boot)}, warning = function(w) 1, error = function(e) 1)
+      w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
     }
-    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
   }
   return(w = apply(w_boot, 2, mean))
 }
@@ -32,12 +33,13 @@ michaud_bootstrap <- function(x, B = 500) {
     returns_boot <- x[sample(1:nobs,nobs, replace = TRUE),]
     mu_boot_hat <- apply(returns_boot, 2, mean)
     Sigma_boot_hat <- tryCatch({cov(returns_boot)}, warning = function(w) 1, error = function(e) 1)
-    while (!is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | !all(eigen(Sigma_boot_hat)$values > 0)) {
+    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat,  control = list(type = 'minvol'))
+    while (any(is.na(w_boot[j, ])) | !is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       returns_boot <- x[sample(1:nobs,nobs, replace = TRUE),]
       mu_boot_hat <- apply(returns_boot, 2, mean)
       Sigma_boot_hat <- tryCatch({cov(returns_boot)}, warning = function(w) 1, error = function(e) 1)
+      w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat,  control = list(type = 'minvol'))
     }
-    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat,  control = list(type = 'minvol'))
   }
   return(w = apply(w_boot, 2, mean))
 }
@@ -63,7 +65,8 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1) {
     epsilon_hat_boot <- residuals(linear_model)
     mu_boot_hat <- alpha_hat_boot + apply(factors_hat,2,mean) %*% beta_hat_boot 
     Sigma_boot_hat <- tryCatch({t(beta_hat_boot) %*% cov(factors_hat) %*% beta_hat_boot + cov(epsilon_hat_boot)}, warning = function(w) 1, error = function(e) 1)
-    while (!is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | !all(eigen(Sigma_boot_hat)$values > 0)) {
+    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
+    while (any(is.na(w_boot[j, ])) | !is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       epsilon_boot <- rmvnorm(nobs, rep(0,p), Sigma_e_hat)
       returns_boot <- matrix(rep(alpha_hat, nobs), ncol = p, byrow = TRUE) + factors_hat %*% betas_hat + epsilon_boot
       linear_model <- lm(as.matrix(returns_boot)~ factors_hat)
@@ -72,8 +75,8 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1) {
       epsilon_hat_boot <- residuals(linear_model)
       mu_boot_hat <- alpha_hat_boot + apply(factors_hat,2,mean) %*% beta_hat_boot 
       Sigma_boot_hat <- tryCatch({t(beta_hat_boot) %*% cov(factors_hat) %*% beta_hat_boot + cov(epsilon_hat_boot)}, warning = function(w) 1, error = function(e) 1)
+      w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
     }
-    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
   }
   return(w = apply(w_boot, 2, mean))
 }
@@ -98,7 +101,8 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1) {
     epsilon_hat_boot <- residuals(linear_model)
     mu_boot_hat <- alpha_hat_boot + apply(factors_hat,2,mean) %*% beta_hat_boot 
     Sigma_boot_hat <- tryCatch({t(beta_hat_boot) %*% cov(factors_hat) %*% beta_hat_boot + cov(epsilon_hat_boot)}, warning = function(w) 1, error = function(e) 1)
-    while (!is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | !all(eigen(Sigma_boot_hat)$values > 0)) {
+    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
+    while (any(is.na(w_boot[j, ])) | !is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       epsilon_boot <- epsilon_hat[sample(1:nobs, nobs, replace = TRUE),]
       returns_boot <- matrix(rep(alpha_hat, nobs), ncol = p, byrow = TRUE) + factors_hat %*% betas_hat + epsilon_boot
       linear_model <- lm(as.matrix(returns_boot)~ factors_hat)
@@ -107,8 +111,8 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1) {
       epsilon_hat_boot <- residuals(linear_model)
       mu_boot_hat <- alpha_hat_boot + apply(factors_hat,2,mean) %*% beta_hat_boot 
       Sigma_boot_hat <- tryCatch({t(beta_hat_boot) %*% cov(factors_hat) %*% beta_hat_boot + cov(epsilon_hat_boot)}, warning = function(w) 1, error = function(e) 1)
+      w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
     }
-    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
   }
   return(w = apply(w_boot, 2, mean))
 }
@@ -141,12 +145,69 @@ combining_parametric_bootstrap <- function(x, B = 500) {
     returns_boot <- rmvnorm(nobs, mu_hat, Sigmas[[selected_sigma]])
     mu_boot_hat <- apply(returns_boot, 2, mean)
     Sigma_boot_hat <- tryCatch({covariance_method(returns_boot, method = selected_sigma)}, warning = function(w) 1, error = function(e) 1)
-    while (!is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | !all(eigen(Sigma_boot_hat)$values > 0)) {
+    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
+    while (any(is.na(w_boot[j, ])) | !is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       returns_boot <- rmvnorm(nobs, mu_hat, Sigmas[[selected_sigma]])
       mu_boot_hat <- apply(returns_boot, 2, mean)
       Sigma_boot_hat <- tryCatch({covariance_method(returns_boot, method = selected_sigma)}, warning = function(w) 1, error = function(e) 1)
+      w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
     }
+  }
+  return(w = apply(w_boot, 2, mean))
+}
+
+# Combining Parametric Bootstrap2
+combining_parametric_bootstrap2 <- function(x, B = 500) {
+  mu_hat <- apply(x, 2, mean)
+  Sigmas <- list(cov(x), 
+                 CovMcd(x)$cov, 
+                 CovMest(x)$cov,
+                 CovMrcd(x)$cov,
+                 CovMve(x)$cov,
+                 CovOgk(x)$cov,
+                 CovSest(x)$cov,
+                 nlShrinkLWEst(x),  #Analytical Non-Linear Shrinkage 
+                 nlshrink_cov(x),  # Non-linear Shrinkage  QUEST
+                 covEstimation(x, control = list(type = 'lw')),  # Ledoit and Wolf (2003
+                 covEstimation(x, control = list(type = 'oneparm')), #Ledoit and Wolf (2004)
+                 covEstimation(x, control = list(type = 'const')),  # Ledoit and Wolf (2002)
+                 covEstimation(x, control = list(type = 'cor')),  # Ledoit and Wolf (2003)
+                 covEstimation(x, control = list(type = 'diag')),  # Ledoit and Wolf (2002)
+                 covEstimation(x, control = list(type = 'large'))) # Ledoit and Wolf (2004)
+  
+  combining_weights <- c(1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[1]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[2]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[3]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[4]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[5]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[6]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[7]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[8]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[9]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[10]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[11]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[12]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[13]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[14]])))),
+                        1/det(cov(scale(x, scale = FALSE) %*% solve(chol(Sigmas[[15]])))))
+  combining_weights <- combining_weights/sum(combining_weights)
+  n_sigmas <- length(Sigmas)
+  n_sigmas_index <- 1:n_sigmas
+  nobs <- nrow(x)
+  p <- ncol(x)
+  w_boot <- matrix(NA, ncol = p, nrow = B)
+  for (j in 1:B) {
+    selected_sigma <- sample(n_sigmas_index,1, prob = combining_weights)
+    returns_boot <- rmvnorm(nobs, mu_hat, Sigmas[[selected_sigma]])
+    mu_boot_hat <- apply(returns_boot, 2, mean)
+    Sigma_boot_hat <- tryCatch({covariance_method(returns_boot, method = selected_sigma)}, warning = function(w) 1, error = function(e) 1)
     w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
+    while (any(is.na(w_boot[j, ])) | !is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
+      returns_boot <- rmvnorm(nobs, mu_hat, Sigmas[[selected_sigma]])
+      mu_boot_hat <- apply(returns_boot, 2, mean)
+      Sigma_boot_hat <- tryCatch({covariance_method(returns_boot, method = selected_sigma)}, warning = function(w) 1, error = function(e) 1)
+      w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
+    }
   }
   return(w = apply(w_boot, 2, mean))
 }
@@ -162,12 +223,13 @@ combining_bootstrap <- function(x, B = 500) {
     returns_boot <- x[sample(1:nobs,nobs, replace = TRUE),]
     mu_boot_hat <- apply(returns_boot, 2, mean)
     Sigma_boot_hat <- tryCatch({covariance_method(returns_boot, method = selected_sigma)}, warning = function(w) 1, error = function(e) 1)
-    while (!is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | !all(eigen(Sigma_boot_hat)$values > 0)) {
+    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
+    while (any(is.na(w_boot[j, ])) | !is.matrix(Sigma_boot_hat) | !isSymmetric.matrix(Sigma_boot_hat) | any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       returns_boot <- x[sample(1:nobs,nobs, replace = TRUE),]
       mu_boot_hat <- apply(returns_boot, 2, mean)
       Sigma_boot_hat <- tryCatch({covariance_method(returns_boot, method = selected_sigma)}, warning = function(w) 1, error = function(e) 1)
+      w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
     }
-    w_boot[j, ] <- optimalPortfolio(Sigma = Sigma_boot_hat, mu = mu_boot_hat, control = list(type = 'minvol'))
   }
   return(w = apply(w_boot, 2, mean))
 }
