@@ -49,7 +49,7 @@ for (i in 1:MC) {
 
 
 if (dir.exists(paste0("MC_d", nassets, "_n", ntotal))) {
-  unlink(crytocurrency, recursive = TRUE)
+  unlink(paste0("MC_d", nassets, "_n", ntotal), recursive = TRUE)
   dir.create(file.path(getwd(), paste0("MC_d", nassets, "_n", ntotal)), recursive = TRUE)
 } else{
   dir.create(file.path(getwd(), paste0("MC_d", nassets, "_n", ntotal)), recursive = TRUE)
