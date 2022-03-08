@@ -70,5 +70,6 @@ dgp <- function(nobs = 60, p = 10, includemean = FALSE, tau = 100, set_par) {
   } 
   # Simulated Covariance matrix
   Sigma <-  t(betas) %*% Sigma_factors %*% betas  + Sigma_e
+  Sigma <- 0.5*Sigma + 0.5*t(Sigma)
   return(list(returns, Sigma, mu))
 }
