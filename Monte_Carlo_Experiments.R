@@ -25,10 +25,11 @@ nassets <- 5
 ntotal <- 60
 nboot <- 500
 w = w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = w_comb_bootparam = w_comb_boot = w_comb_bootparam2 = matrix(NA, ncol = nassets, nrow = MC)
-option = "bounded_mvp_"  # "short_sales_", "bounded_", "unc_"
+option = "short_sales_"  # "short_sales_", "bounded_", "unc_"
 sp <- setting_parameters(p = nassets) 
 
-constrains_opt <- list(type = 'minvol', LB = rep(0, nassets), UB = rep(2/nassets, nassets))
+#constrains_opt <- list(type = 'minvol', LB = rep(0, nassets), UB = rep(2/nassets, nassets))
+constrains_opt <- list(type = 'minvol', constraint = 'lo')
 
 for (i in 1:MC) {
   print(sprintf("Monte Carlo iterarion %d", i))
