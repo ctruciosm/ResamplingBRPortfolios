@@ -36,7 +36,7 @@ setting_parameters <- function(p) {
   epsilon <-  monthly_data_centred - pca_factors %*% betas
   Sigma_e <- cov(epsilon)
   while (any(eigen(Sigma_e)$values <= 1e-08)) {
-    Sigma_e <- as.matrix(nearPD(Sigma_e)$mat)
+    Sigma_e <- as.matrix(nearPD(Sigma_e, doSym = TRUE)$mat)
   }
   return(list(pca_factors, betas, Sigma_e))
 }
