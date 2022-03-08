@@ -20,7 +20,7 @@ source("Auxiliary_Functions.R")
 source("Resampling_Techniques.R")
 
 # Setup
-MC <- 2
+MC <- 1000
 nassets <- 5
 ntotal <- 60
 nboot <- 500
@@ -42,9 +42,9 @@ for (i in 1:MC) {
   k <- POET::POETKhat(t(returns_sim))$K1HL
   w_factor_bootparam[i,] <- factor_parametric_bootstrap(returns_sim, B = nboot, n_factors  = k) # Factor conditional Parametric Bootstrap weights
   w_factor_boot[i,] <- factor_bootstrap(returns_sim, B = nboot, n_factors  = k) # Factor conditional Bootstrap weights
-  w_comb_bootparam[i,] <- combining_parametric_bootstrap(returns_sim, B = nboot) # Combining Parametric Resampling
+  #w_comb_bootparam[i,] <- combining_parametric_bootstrap(returns_sim, B = nboot) # Combining Parametric Resampling
   w_comb_bootparam2[i,] <- combining_parametric_bootstrap2(returns_sim, B = nboot) # Combining Parametric Resampling
-  w_comb_boot[i,] <- combining_bootstrap(returns_sim, B = nboot) # Combining Resampling
+  #w_comb_boot[i,] <- combining_bootstrap(returns_sim, B = nboot) # Combining Resampling
 }
 
 newfolder <- paste0("MC_d", nassets, "_n", ntotal)
@@ -61,8 +61,8 @@ write.csv(w_bootparam, paste0(newfolder, "/", option,"w_bootparam", nassets, "_"
 write.csv(w_boot, paste0(newfolder, "/", option,"w_boot", nassets, "_", ntotal, ".csv"))
 write.csv(w_factor_bootparam, paste0(newfolder, "/", option,"w_factor_bootparam", nassets, "_", ntotal, ".csv"))
 write.csv(w_factor_boot, paste0(newfolder, "/", option,"w_factor_boot", nassets, "_", ntotal, ".csv"))
-write.csv(w_comb_bootparam, paste0(newfolder, "/", option,"w_comb_bootparam", nassets, "_", ntotal, ".csv"))
+#write.csv(w_comb_bootparam, paste0(newfolder, "/", option,"w_comb_bootparam", nassets, "_", ntotal, ".csv"))
 write.csv(w_comb_bootparam2, paste0(newfolder, "/", option,"w_comb_bootparam2", nassets, "_", ntotal, ".csv"))
-write.csv(w_comb_boot, paste0(newfolder, "/", option,"w_comb_boot", nassets, "_", ntotal, ".csv"))
+#write.csv(w_comb_boot, paste0(newfolder, "/", option,"w_comb_boot", nassets, "_", ntotal, ".csv"))
 
 
