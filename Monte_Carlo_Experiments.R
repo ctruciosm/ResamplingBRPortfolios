@@ -23,7 +23,7 @@ source("Resampling_Techniques.R")
 MC <- 1000
 nassets <- 5
 ntotal <- 60
-nboot <- 30
+nboot <- 50
 
 MonteCarloExperiment <- function(MC, nassets, ntotal, nboot, option) {
   w = w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = w_comb_bootparam = w_comb_boot = w_comb_bootparam2 = matrix(NA, ncol = nassets, nrow = MC)
