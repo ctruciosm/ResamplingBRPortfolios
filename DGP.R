@@ -47,19 +47,20 @@ dgp <- function(nobs = 60, p = 10, includemean = FALSE, tau = 100, set_par) {
   betas_pre <- set_par[[2]]
   factors_pre <- set_par[[1]]
   k <- ncol(factors_pre)
+  n_oos <- 1000
   # Simulate epsilon
   Sigma_e <- rWishart(1, p, 1/p * Sigma_e_pre)[,,1]
-  epsilon <- rmvnorm(nobs, rep(0,p), Sigma_e)
+  epsilon <- rmvnorm(nobs + n_oos , rep(0,p), Sigma_e, method = "chol")
   # Simulate betas
   betas <- rmvnorm(1, betas_pre, 1/tau * diag(p))
   betas <- matrix(betas/sqrt(sum(betas^2)), nrow = k)
   # Simulate factor
   if (k == 1) {
     Sigma_factors <- var(factors_pre)*rchisq(1,1)
-    k_factors <- matrix(rnorm(nobs, mean = 0, sd = sqrt(Sigma_factors[1,1])), ncol = k)
+    k_factors <- matrix(rnorm(nobs + n_oos , mean = 0, sd = sqrt(Sigma_factors[1,1])), ncol = k)
   } else{
     Sigma_factors <- rWishart(1, k, 1/k * cov(factors_pre))[,,1]
-    k_factors <- rmvnorm(nobs, rep(0,p), Sigma_factors)
+    k_factors <- rmvnorm(nobs + n_oos , rep(0,p), Sigma_factors)
   }
   # Simulated returns
   returns <- k_factors %*%  betas + epsilon
@@ -71,5 +72,5 @@ dgp <- function(nobs = 60, p = 10, includemean = FALSE, tau = 100, set_par) {
   # Simulated Covariance matrix
   Sigma <-  t(betas) %*% Sigma_factors %*% betas  + Sigma_e
   Sigma <- 0.5*Sigma + 0.5*t(Sigma)
-  return(list(returns, Sigma, mu))
+  return(list(returns[1:nobs, ], Sigma, mu, returns[-c(1:nobs), ]))
 }

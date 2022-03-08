@@ -6,7 +6,7 @@ library(tidyr)
 library(ggplot2)
 setwd("./MC_d5_n60")
 
-pattern <- "bounded"
+pattern <- "short_sales"
 filenames <- list.files(pattern = "*.csv", full.names = TRUE)
 filenames <- filenames[str_detect(filenames, pattern)]
 

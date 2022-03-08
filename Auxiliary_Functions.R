@@ -21,3 +21,8 @@ covariance_method <- function(x, method = 1) {
                       covEstimation(x, control = list(type = 'large')))
   return(Sigma_est)
 }
+
+
+ir <- function(x) {
+  mean(x)/sd(x)
+}
