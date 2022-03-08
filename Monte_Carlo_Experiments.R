@@ -25,8 +25,11 @@ nassets <- 5
 ntotal <- 60
 nboot <- 500
 w = w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = w_comb_bootparam = w_comb_boot = w_comb_bootparam2 = matrix(NA, ncol = nassets, nrow = MC)
-option = "unc_mvp_"  # "short_sales_", "bounded_"
+option = "bounded_mvp_"  # "short_sales_", "bounded_", "unc_"
 sp <- setting_parameters(p = nassets) 
+
+constrains_opt <- list(type = 'minvol', LB = rep(0, nassets), UB = rep(2/nassets, nassets))
+
 for (i in 1:MC) {
   print(sprintf("Monte Carlo iterarion %d", i))
   set.seed(i + 123)
@@ -35,16 +38,16 @@ for (i in 1:MC) {
   Sigma_sim <- data_sim[[2]]
   mu_sim <- data_sim[[3]]
   # Weights
-  w[i,] <- optimalPortfolio(Sigma = Sigma_sim, mu = mu_sim, control = list(type = 'minvol')) # True weights
-  w_estim[i,] <- optimalPortfolio(Sigma = cov(returns_sim), mu = apply(returns_sim, 2, mean),control = list(type = 'minvol')) # Markowitz weights
-  w_bootparam[i,] <- michaud_parametric_bootstrap(returns_sim, B = nboot) # Michaud Parametric Bootstrap weights
-  w_boot[i,] <- michaud_bootstrap(returns_sim, B = nboot) # Michaud Bootstrap weights
+  w[i,] <- optimalPortfolio(Sigma = Sigma_sim, mu = mu_sim, control = constrains_opt) # True weights
+  w_estim[i,] <- optimalPortfolio(Sigma = cov(returns_sim), mu = apply(returns_sim, 2, mean),control = constrains_opt) # Markowitz weights
+  w_bootparam[i,] <- michaud_parametric_bootstrap(returns_sim, B = nboot, option_list = constrains_opt) # Michaud Parametric Bootstrap weights
+  w_boot[i,] <- michaud_bootstrap(returns_sim, B = nboot, option_list = constrains_opt) # Michaud Bootstrap weights
   k <- POET::POETKhat(t(returns_sim))$K1HL
-  w_factor_bootparam[i,] <- factor_parametric_bootstrap(returns_sim, B = nboot, n_factors  = k) # Factor conditional Parametric Bootstrap weights
-  w_factor_boot[i,] <- factor_bootstrap(returns_sim, B = nboot, n_factors  = k) # Factor conditional Bootstrap weights
-  #w_comb_bootparam[i,] <- combining_parametric_bootstrap(returns_sim, B = nboot) # Combining Parametric Resampling
-  #w_comb_bootparam2[i,] <- combining_parametric_bootstrap2(returns_sim, B = nboot) # Combining Parametric Resampling
-  #w_comb_boot[i,] <- combining_bootstrap(returns_sim, B = nboot) # Combining Resampling
+  w_factor_bootparam[i,] <- factor_parametric_bootstrap(returns_sim, B = nboot, n_factors  = k, option_list = constrains_opt) # Factor conditional Parametric Bootstrap weights
+  w_factor_boot[i,] <- factor_bootstrap(returns_sim, B = nboot, n_factors  = k, option_list = constrains_opt) # Factor conditional Bootstrap weights
+  #w_comb_bootparam[i,] <- combining_parametric_bootstrap(returns_sim, B = nboot, option_list = constrains_opt) # Combining Parametric Resampling
+  #w_comb_bootparam2[i,] <- combining_parametric_bootstrap2(returns_sim, B = nboot, option_list = constrains_opt) # Combining Parametric Resampling
+  #w_comb_boot[i,] <- combining_bootstrap(returns_sim, B = nboo, option_list = constrains_opt) # Combining Resampling
 }
 
 newfolder <- paste0("MC_d", nassets, "_n", ntotal)
