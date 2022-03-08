@@ -4,10 +4,10 @@
 library(stringr)
 library(tidyr)
 library(ggplot2)
+setwd("./MC_d5_n60")
 
-pattern <- "10_60"
+pattern <- "bounded"
 filenames <- list.files(pattern = "*.csv", full.names = TRUE)
-filenames <- setdiff(filenames, "./IBXXDia_02-03-22.csv")
 filenames <- filenames[str_detect(filenames, pattern)]
 
 w <- read.csv(filenames[1])[,-1]
@@ -22,11 +22,13 @@ for (j in 2:n_methods) {
   mae[, j - 1] <- apply(abs(difer), 1, mean)
 }
 
-names <- str_replace(str_replace(filenames[-1], paste0(pattern, ".csv"), ""), "./unc_mvp_w_", "")
+pattern2 <- paste0("./", pattern, "_mvp_w_")
+names <- str_replace(str_replace(filenames[-1], paste0("5_60", ".csv"), ""), pattern2, "")
 colnames(rmse) <- names
 colnames(mae) <- names
 
 apply(mae, 2, mean)
+apply(rmse, 2, mean)
 
 pivot_longer(data.frame(rmse), cols = 1:(n_methods - 1), names_to = "method") %>% 
   ggplot() + 
