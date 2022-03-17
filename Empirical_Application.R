@@ -19,27 +19,32 @@ source("Auxiliary_Functions.R")
 
 # Importing and Wrangling  Data
 {
-monthly_data <- read_xlsx("Data/dados_mensais_IBRX.xlsx", na = "-")
-colnames(monthly_data) <- str_replace(colnames(monthly_data), "Retorno\r\ndo fechamento\r\nem 1 mês\r\nEm moeda orig\r\najust p/ prov\r\n", "")
-
-monthly_data <- monthly_data %>%
-  mutate(Data = str_replace(Data, "Jan", "01"), 
-         Data = str_replace(Data, "Fev", "02"),
-         Data = str_replace(Data, "Mar", "03"), 
-         Data = str_replace(Data, "Abr", "04"),
-         Data = str_replace(Data, "Mai", "05"), 
-         Data = str_replace(Data, "Jun", "06"),
-         Data = str_replace(Data, "Jul", "07"), 
-         Data = str_replace(Data, "Ago", "08"),
-         Data = str_replace(Data, "Set", "09"), 
-         Data = str_replace(Data, "Out", "10"),
-         Data = str_replace(Data, "Nov", "11"), 
-         Data = str_replace(Data, "Dez", "12")) %>% 
-  mutate(Data = lubridate::my(Data)) %>% 
-  filter(Data >= '2000-01-01')
-monthly_data <- monthly_data %>% select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
-monthly_data <- monthly_data[, -1]
+  monthly_data <- read_xlsx("Data/economatica.xlsx", na = "-")
+  colnames(monthly_data) <- str_replace(colnames(monthly_data), "Retorno\ndo fechamento\nem 1 mês\nEm moeda orig\najust p/ prov\n", "")
+  
+  monthly_data <- monthly_data %>%
+    mutate(Data = str_replace(Data, "Jan", "01"), 
+           Data = str_replace(Data, "Fev", "02"),
+           Data = str_replace(Data, "Mar", "03"), 
+           Data = str_replace(Data, "Abr", "04"),
+           Data = str_replace(Data, "Mai", "05"), 
+           Data = str_replace(Data, "Jun", "06"),
+           Data = str_replace(Data, "Jul", "07"), 
+           Data = str_replace(Data, "Ago", "08"),
+           Data = str_replace(Data, "Set", "09"), 
+           Data = str_replace(Data, "Out", "10"),
+           Data = str_replace(Data, "Nov", "11"), 
+           Data = str_replace(Data, "Dez", "12")) %>% 
+    mutate(Data = lubridate::my(Data)) %>% 
+    filter(Data >= '2000-01-01')
+  monthly_data <- monthly_data %>% select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
+  ibovespa <- monthly_data %>% select(IBOV)
+  monthly_data <- monthly_data %>% select(-Data, -IBOV)
+  monthly_data <- monthly_data[-nrow(monthly_data),]
+  ibovespa <- ibovespa[-nrow(monthly_data),]
 }
+
+
 
 InS <- 60
 OoS <- nrow(monthly_data) - InS
@@ -51,7 +56,7 @@ nmethods <- 5
 ###   Minimum Variance Portfolios   ###
 #######################################
 nconstrains <- 3
-w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = matrix(NA, nrow = OoS, ncol = nconstrains*p)
+w_estim = w_bootparam = w_boot = w_factor_bootparam_pca = w_factor_boot_pca = w_factor_bootparam_ibov = w_factor_boot_ibov = matrix(NA, nrow = OoS, ncol = nconstrains*p)
 Rport <- matrix(NA, nrow = OoS, ncol = nconstrains*nmethods)
 w_measures <- matrix(0, nrow = OoS, ncol = 2*nconstrains*nmethods)
 for (i in 1:OoS) {
@@ -59,16 +64,18 @@ for (i in 1:OoS) {
   set.seed(i + 1234)
   r_ins <- as.matrix(monthly_data[i:(InS - 1 + i), ])
   r_oos <- as.numeric(monthly_data[InS - 1 + i + 1, ]) 
-  
-  weights_unc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol'), nboot)
-  weights_ssc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot)
-  weights_luc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(0.1, p)), nboot)
+  ibov <- as.matrix(ibovespa[i:(InS - 1 + i), ])
+  weights_unc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol'), nboot, factors = ibov)
+  weights_ssc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot, factors = ibov)
+  weights_luc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(0.1, p)), nboot, factors = ibov)
   
   w_estim[i, ] <- c(weights_unc[1, ], weights_ssc[1, ], weights_luc[1, ])
   w_bootparam[i, ] <- c(weights_unc[2, ], weights_ssc[2, ], weights_luc[2, ])
   w_boot[i, ] <- c(weights_unc[3, ], weights_ssc[3, ], weights_luc[3, ])
-  w_factor_bootparam[i, ] <- c(weights_unc[4, ], weights_ssc[4, ], weights_luc[4, ])
-  w_factor_boot[i, ] <- c(weights_unc[5, ], weights_ssc[5, ], weights_luc[5, ])
+  w_factor_bootparam_pca[i, ] <- c(weights_unc[4, ], weights_ssc[4, ], weights_luc[4, ])
+  w_factor_boot_pca[i, ] <- c(weights_unc[5, ], weights_ssc[5, ], weights_luc[5, ])
+  w_factor_bootparam_ibov[i, ] <- c(weights_unc[6, ], weights_ssc[6, ], weights_luc[6, ])
+  w_factor_boot_ibov[i, ] <- c(weights_unc[7, ], weights_ssc[7, ], weights_luc[7, ])
   
   if (i > 1) {
     w_measures[i, ] <- c(unlist(weights_measures(w_estim[i - 1, 1:p], w_estim[i, 1:p], r_oos)),
