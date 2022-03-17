@@ -12,6 +12,7 @@ library(dplyr)
 library(lubridate)
 library(POET)
 library(Matrix)
+library(kableExtra)
 source("Resampling_Techniques.R")
 source("Performance_Measures.R")
 source("Auxiliary_Functions.R")
@@ -52,35 +53,75 @@ nmethods <- 5
 nconstrains <- 3
 w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = matrix(NA, nrow = OoS, ncol = nconstrains*p)
 Rport <- matrix(NA, nrow = OoS, ncol = nconstrains*nmethods)
+w_measures <- matrix(0, nrow = OoS, ncol = 2*nconstrains*nmethods)
 for (i in 1:OoS) {
   print(i)
-  set.seed(i + 531)
+  set.seed(i + 1234)
   r_ins <- as.matrix(monthly_data[i:(InS - 1 + i), ])
   r_oos <- as.numeric(monthly_data[InS - 1 + i + 1, ]) 
   
-  weights_unc <- calculate_portfolio_weights(r_ins, constrains_opt = list(type = 'minvol'), nboot)
-  weights_ssc <- calculate_portfolio_weights(r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot)
-  weights_luc <- calculate_portfolio_weights(r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(0.1, p)), nboot)
+  weights_unc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol'), nboot)
+  weights_ssc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot)
+  weights_luc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(0.1, p)), nboot)
   
   w_estim[i, ] <- c(weights_unc[1, ], weights_ssc[1, ], weights_luc[1, ])
   w_bootparam[i, ] <- c(weights_unc[2, ], weights_ssc[2, ], weights_luc[2, ])
   w_boot[i, ] <- c(weights_unc[3, ], weights_ssc[3, ], weights_luc[3, ])
   w_factor_bootparam[i, ] <- c(weights_unc[4, ], weights_ssc[4, ], weights_luc[4, ])
   w_factor_boot[i, ] <- c(weights_unc[5, ], weights_ssc[5, ], weights_luc[5, ])
-
+  
+  if (i > 1) {
+    w_measures[i, ] <- c(unlist(weights_measures(w_estim[i - 1, 1:p], w_estim[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_bootparam[i - 1, 1:p], w_bootparam[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_boot[i - 1, 1:p], w_boot[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam[i - 1, 1:p], w_factor_bootparam[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_boot[i - 1, 1:p], w_factor_boot[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_estim[i - 1, (p + 1):(2*p)], w_estim[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_bootparam[i - 1, (p + 1):(2*p)], w_bootparam[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_boot[i - 1, (p + 1):(2*p)], w_boot[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam[i - 1, (p + 1):(2*p)], w_factor_bootparam[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot[i - 1, (p + 1):(2*p)], w_factor_boot[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_estim[i - 1, (2*p + 1):(3*p)], w_estim[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_bootparam[i - 1, (2*p + 1):(3*p)], w_bootparam[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_boot[i - 1, (2*p + 1):(3*p)], w_boot[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam[i - 1, (2*p + 1):(3*p)], w_factor_bootparam[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot[i - 1, (2*p + 1):(3*p)], w_factor_boot[i, (2*p + 1):(3*p)], r_oos)))
+  }
   Rport[i,] <-  c(r_oos %*% w_estim[i, 1:p], r_oos %*% w_bootparam[i, 1:p], r_oos %*% w_boot[i, 1:p], r_oos %*% w_factor_bootparam[i, 1:p], r_oos %*% w_factor_boot[i, 1:p],
                  r_oos %*% w_estim[i, (p + 1):(2 * p)], r_oos %*% w_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_boot[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot[i, (p + 1):(2 * p)],
                  r_oos %*% w_estim[i, (2 * p + 1):(3 * p)], r_oos %*% w_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_boot[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot[i, (2 * p + 1):(3 * p)])
-
 }
 
-oos_results <- apply(Rport[,1:nmethods],2,medidas)
-row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO")
-colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric",
-                            "Factor-Based Parametric", "Factor-Based Non-Parametric")
-
-xtable::xtable(t(oos_results),digits = 4)
-
+# Saving Results
+colnames(Rport) <- c("unc_Markowitz", "unc_MichaudParam", "unc_MichaudNonP", "unc_FactorParam", "unc_FactorNonP",
+                     "ssc_Markowitz", "ssc_MichaudParam", "ssc_MichaudNonP", "ssc_FactorParam", "ssc_FactorNonP",
+                     "luc_Markowitz", "luc_MichaudParam", "luc_MichaudNonP", "luc_FactorParam", "luc_FactorNonP")
+write.table(Rport, "Results/Rport.csv", sep = ",")
 
 
+# Tables for unscontrained MVP
+oos_results <- rbind(apply(Rport[,1:nmethods],2,medidas), apply(w_measures[-1, seq(1, 2*nmethods, by = 2)], 2, mean),apply(w_measures[-1, seq(2, 2*nmethods, by = 2)], 2, mean))
+row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
+colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric", "Factor-Based Non-Parametric")
+t(oos_results) %>% 
+  knitr::kable(digits = 4, format = "latex", align = "lccccccc",
+               table.envir = "table", label = "unc_mvp") %>% 
+  save_kable(keep_tex = T, file = paste0("Results/unc_mvp.tex"))
 
+# Tables for short-selling MVP
+oos_results <- rbind(apply(Rport[,(nmethods + 1):(2*nmethods)],2,medidas), apply(w_measures[-1, seq(2*nmethods + 1, 4*nmethods, by = 2)], 2, mean),apply(w_measures[-1, seq(2*nmethods + 2, 4*nmethods, by = 2)], 2, mean))
+row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
+colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric", "Factor-Based Non-Parametric")
+t(oos_results) %>% 
+  knitr::kable(digits = 4, format = "latex", align = "lccccccc",
+               table.envir = "table", label = "ssc_mvp") %>% 
+  save_kable(keep_tex = T, file = paste0("Results/ssc_mvp.tex"))
+
+# Tables for lower-upper MVP
+oos_results <- rbind(apply(Rport[,(2*nmethods + 1):(3*nmethods)],2,medidas), apply(w_measures[-1, seq(4*nmethods + 1, 6*nmethods, by = 2)], 2, mean),apply(w_measures[-1, seq(4*nmethods + 2, 6*nmethods, by = 2)], 2, mean))
+row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
+colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric", "Factor-Based Non-Parametric")
+t(oos_results) %>% 
+  knitr::kable(digits = 4, format = "latex", align = "lccccccc",
+               table.envir = "table", label = "luc_mvp") %>% 
+  save_kable(keep_tex = T, file = paste0("Results/luc_mvp.tex"))
