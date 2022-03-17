@@ -1,10 +1,20 @@
 #################################
 ###   Empirical Application   ###
 #################################
-
+rm(list = ls())
 library(dplyr)
+library(mvtnorm)
+library(RiskPortfolios)
+library(tidyr)
+library(readxl)
+library(stringr)
+library(dplyr)
+library(lubridate)
+library(POET)
+library(Matrix)
 source("Resampling_Techniques.R")
 source("Performance_Measures.R")
+source("Auxiliary_Functions.R")
 
 # Importing and Wrangling  Data
 {
@@ -34,27 +44,37 @@ InS <- 60
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
 nboot <- 250
-constrains_opt <- list(type = 'minvol', constraint = 'lo')
-w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = matrix(NA, ncol = p, nrow = OoS)
-Rport <- matrix(NA, ncol = 5, nrow = OoS)
+nmethods <- 5
+
+#######################################
+###   Minimum Variance Portfolios   ###
+#######################################
+nconstrains <- 3
+w_estim = w_bootparam = w_boot = w_factor_bootparam = w_factor_boot = matrix(NA, nrow = OoS, ncol = nconstrains*p)
+Rport <- matrix(NA, nrow = OoS, ncol = nconstrains*nmethods)
 for (i in 1:OoS) {
   print(i)
-  set.seed(i + 123)
-  r <- as.matrix(monthly_data[i:(InS - 1 + i), ])
-  w_estim[i,] <- optimalPortfolio(Sigma = cov(r), mu = colMeans(r), control = constrains_opt)
-  w_bootparam[i,] <- michaud_parametric_bootstrap(r, B = nboot, option_list = constrains_opt) 
-  w_boot[i,] <- michaud_bootstrap(r, B = nboot, option_list = constrains_opt) 
-  k <- POET::POETKhat(t(r))$K1HL
-  w_factor_bootparam[i,] <- factor_parametric_bootstrap(r, B = nboot, n_factors  = k, option_list = constrains_opt) 
-  w_factor_boot[i,] <- factor_bootstrap(r, B = nboot, n_factors  = k, option_list = constrains_opt) 
-  OoS_returns <- as.numeric(monthly_data[InS - 1 + i + 1, ]) 
-  Rport[i,] <- c(OoS_returns %*% w_estim[i,], OoS_returns %*% w_bootparam[i,], 
-                OoS_returns %*% w_boot[i,], OoS_returns %*% w_factor_bootparam[i,],
-                OoS_returns %*% w_factor_boot[i,])
+  set.seed(i + 531)
+  r_ins <- as.matrix(monthly_data[i:(InS - 1 + i), ])
+  r_oos <- as.numeric(monthly_data[InS - 1 + i + 1, ]) 
   
+  weights_unc <- calculate_portfolio_weights(r_ins, constrains_opt = list(type = 'minvol'), nboot)
+  weights_ssc <- calculate_portfolio_weights(r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot)
+  weights_luc <- calculate_portfolio_weights(r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(0.1, p)), nboot)
+  
+  w_estim[i, ] <- c(weights_unc[1, ], weights_ssc[1, ], weights_luc[1, ])
+  w_bootparam[i, ] <- c(weights_unc[2, ], weights_ssc[2, ], weights_luc[2, ])
+  w_boot[i, ] <- c(weights_unc[3, ], weights_ssc[3, ], weights_luc[3, ])
+  w_factor_bootparam[i, ] <- c(weights_unc[4, ], weights_ssc[4, ], weights_luc[4, ])
+  w_factor_boot[i, ] <- c(weights_unc[5, ], weights_ssc[5, ], weights_luc[5, ])
+
+  Rport[i,] <-  c(r_oos %*% w_estim[i, 1:p], r_oos %*% w_bootparam[i, 1:p], r_oos %*% w_boot[i, 1:p], r_oos %*% w_factor_bootparam[i, 1:p], r_oos %*% w_factor_boot[i, 1:p],
+                 r_oos %*% w_estim[i, (p + 1):(2 * p)], r_oos %*% w_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_boot[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot[i, (p + 1):(2 * p)],
+                 r_oos %*% w_estim[i, (2 * p + 1):(3 * p)], r_oos %*% w_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_boot[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot[i, (2 * p + 1):(3 * p)])
+
 }
 
-oos_results <- apply(Rport,2,medidas)
+oos_results <- apply(Rport[,1:nmethods],2,medidas)
 row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO")
 colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric",
                             "Factor-Based Parametric", "Factor-Based Non-Parametric")
