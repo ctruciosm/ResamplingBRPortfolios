@@ -50,7 +50,7 @@ InS <- 60
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
 nboot <- 250
-nmethods <- 5
+nmethods <- 7
 
 #######################################
 ###   Minimum Variance Portfolios   ###
@@ -81,54 +81,63 @@ for (i in 1:OoS) {
     w_measures[i, ] <- c(unlist(weights_measures(w_estim[i - 1, 1:p], w_estim[i, 1:p], r_oos)),
                          unlist(weights_measures(w_bootparam[i - 1, 1:p], w_bootparam[i, 1:p], r_oos)),
                          unlist(weights_measures(w_boot[i - 1, 1:p], w_boot[i, 1:p], r_oos)),
-                         unlist(weights_measures(w_factor_bootparam[i - 1, 1:p], w_factor_bootparam[i, 1:p], r_oos)),
-                         unlist(weights_measures(w_factor_boot[i - 1, 1:p], w_factor_boot[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam_pca[i - 1, 1:p], w_factor_bootparam_pca[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_boot_pca[i - 1, 1:p], w_factor_boot_pca[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam_ibov[i - 1, 1:p], w_factor_bootparam_ibov[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_boot_ibov[i - 1, 1:p], w_factor_boot_ibov[i, 1:p], r_oos)),
                          unlist(weights_measures(w_estim[i - 1, (p + 1):(2*p)], w_estim[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_bootparam[i - 1, (p + 1):(2*p)], w_bootparam[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_boot[i - 1, (p + 1):(2*p)], w_boot[i, (p + 1):(2*p)], r_oos)),
-                         unlist(weights_measures(w_factor_bootparam[i - 1, (p + 1):(2*p)], w_factor_bootparam[i, (p + 1):(2*p)], r_oos)),
-                         unlist(weights_measures(w_factor_boot[i - 1, (p + 1):(2*p)], w_factor_boot[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam_pca[i - 1, (p + 1):(2*p)], w_factor_bootparam_pca[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot_pca[i - 1, (p + 1):(2*p)], w_factor_boot_pca[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam_ibov[i - 1, (p + 1):(2*p)], w_factor_bootparam_ibov[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot_ibov[i - 1, (p + 1):(2*p)], w_factor_boot_ibov[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_estim[i - 1, (2*p + 1):(3*p)], w_estim[i, (2*p + 1):(3*p)], r_oos)),
                          unlist(weights_measures(w_bootparam[i - 1, (2*p + 1):(3*p)], w_bootparam[i, (2*p + 1):(3*p)], r_oos)),
                          unlist(weights_measures(w_boot[i - 1, (2*p + 1):(3*p)], w_boot[i, (2*p + 1):(3*p)], r_oos)),
-                         unlist(weights_measures(w_factor_bootparam[i - 1, (2*p + 1):(3*p)], w_factor_bootparam[i, (2*p + 1):(3*p)], r_oos)),
-                         unlist(weights_measures(w_factor_boot[i - 1, (2*p + 1):(3*p)], w_factor_boot[i, (2*p + 1):(3*p)], r_oos)))
+                         unlist(weights_measures(w_factor_bootparam_pca[i - 1, (2*p + 1):(3*p)], w_factor_bootparam_pca[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot_pca[i - 1, (2*p + 1):(3*p)], w_factor_boot_pca[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam_ibov[i - 1, (2*p + 1):(3*p)], w_factor_bootparam_ibov[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot_ibov[i - 1, (2*p + 1):(3*p)], w_factor_boot_ibov[i, (2*p + 1):(3*p)], r_oos)))
   }
-  Rport[i,] <-  c(r_oos %*% w_estim[i, 1:p], r_oos %*% w_bootparam[i, 1:p], r_oos %*% w_boot[i, 1:p], r_oos %*% w_factor_bootparam[i, 1:p], r_oos %*% w_factor_boot[i, 1:p],
-                 r_oos %*% w_estim[i, (p + 1):(2 * p)], r_oos %*% w_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_boot[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot[i, (p + 1):(2 * p)],
-                 r_oos %*% w_estim[i, (2 * p + 1):(3 * p)], r_oos %*% w_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_boot[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot[i, (2 * p + 1):(3 * p)])
+  Rport[i,] <-  c(r_oos %*% w_estim[i, 1:p], r_oos %*% w_bootparam[i, 1:p], r_oos %*% w_boot[i, 1:p], r_oos %*% w_factor_bootparam_pca[i, 1:p], r_oos %*% w_factor_boot_pca[i, 1:p], r_oos %*% w_factor_bootparam_ibov[i, 1:p], r_oos %*% w_factor_boot_ibov[i, 1:p],
+                 r_oos %*% w_estim[i, (p + 1):(2 * p)], r_oos %*% w_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_boot[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam_pca[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot_pca[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam_ibov[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot_ibov[i, (p + 1):(2 * p)],
+                 r_oos %*% w_estim[i, (2 * p + 1):(3 * p)], r_oos %*% w_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_boot[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam_pca[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot_pca[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam_ibov[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot_ibov[i, (2 * p + 1):(3 * p)])
 }
 
 # Saving Results
-colnames(Rport) <- c("unc_Markowitz", "unc_MichaudParam", "unc_MichaudNonP", "unc_FactorParam", "unc_FactorNonP",
-                     "ssc_Markowitz", "ssc_MichaudParam", "ssc_MichaudNonP", "ssc_FactorParam", "ssc_FactorNonP",
-                     "luc_Markowitz", "luc_MichaudParam", "luc_MichaudNonP", "luc_FactorParam", "luc_FactorNonP")
+colnames(Rport) <- c("unc_Markowitz", "unc_MichaudParam", "unc_MichaudNonP", "unc_FactorParamPCA", "unc_FactorNonPPCA", "unc_FactorParamIbov", "unc_FactorNonPIbov",
+                     "ssc_Markowitz", "ssc_MichaudParam", "ssc_MichaudNonP", "ssc_FactorParamPCA", "ssc_FactorNonPPCA", "ssc_FactorParamIbov", "ssc_FactorNonPIbov",
+                     "luc_Markowitz", "luc_MichaudParam", "luc_MichaudNonP", "luc_FactorParamPCA", "luc_FactorNonPPCA", "luc_FactorParamIbov", "luc_FactorNonPIbov")
 write.table(Rport, "Results/Rport.csv", sep = ",")
 
 
 # Tables for unscontrained MVP
+Caption <- "Out-of-sample performance measures of the unconstrained minimum variance portfolio: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
 oos_results <- rbind(apply(Rport[,1:nmethods],2,medidas), apply(w_measures[-1, seq(1, 2*nmethods, by = 2)], 2, mean),apply(w_measures[-1, seq(2, 2*nmethods, by = 2)], 2, mean))
 row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
-colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric", "Factor-Based Non-Parametric")
+colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric PCA", "Factor-Based Non-Parametric PCA", "Factor-Based Parametric Ibov", "Factor-Based Non-Parametric Ibov")
 t(oos_results) %>% 
-  knitr::kable(digits = 4, format = "latex", align = "lccccccc",
+  knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "unc_mvp") %>% 
   save_kable(keep_tex = T, file = paste0("Results/unc_mvp.tex"))
 
 # Tables for short-selling MVP
+Caption <- "Out-of-sample performance measures of the minimum variance portfolio with short-selling constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
 oos_results <- rbind(apply(Rport[,(nmethods + 1):(2*nmethods)],2,medidas), apply(w_measures[-1, seq(2*nmethods + 1, 4*nmethods, by = 2)], 2, mean),apply(w_measures[-1, seq(2*nmethods + 2, 4*nmethods, by = 2)], 2, mean))
 row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
-colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric", "Factor-Based Non-Parametric")
+colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric PCA", "Factor-Based Non-Parametric PCA", "Factor-Based Parametric Ibov", "Factor-Based Non-Parametric Ibov")
 t(oos_results) %>% 
-  knitr::kable(digits = 4, format = "latex", align = "lccccccc",
+  knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "ssc_mvp") %>% 
   save_kable(keep_tex = T, file = paste0("Results/ssc_mvp.tex"))
 
 # Tables for lower-upper MVP
+Caption <- "Out-of-sample performance measures of the minimum variance portfolio with lower (0) and upper (10) bound constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
 oos_results <- rbind(apply(Rport[,(2*nmethods + 1):(3*nmethods)],2,medidas), apply(w_measures[-1, seq(4*nmethods + 1, 6*nmethods, by = 2)], 2, mean),apply(w_measures[-1, seq(4*nmethods + 2, 6*nmethods, by = 2)], 2, mean))
 row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
-colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric", "Factor-Based Non-Parametric")
+colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric","Factor-Based Parametric PCA", "Factor-Based Non-Parametric PCA", "Factor-Based Parametric Ibov", "Factor-Based Non-Parametric Ibov")
 t(oos_results) %>% 
-  knitr::kable(digits = 4, format = "latex", align = "lccccccc",
+  knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "luc_mvp") %>% 
   save_kable(keep_tex = T, file = paste0("Results/luc_mvp.tex"))
