@@ -33,8 +33,8 @@ library(ggplot2)
     mutate(Data = lubridate::my(Data)) %>% 
     filter(Data >= '2000-01-01')
   monthly_data <- monthly_data %>% select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
-  monthly_data_dates <- monthly_data %>% select(-IBOV)
-  monthly_data <- monthly_data %>% select(-Data, -IBOV)
+  monthly_data_dates <- monthly_data %>% select(-IBOV,  -BRKM5, -CSNA3, -EGIE3, -GOAU4, -TIMS3, -USIM5, -VALE3, -BBDC3, -ELET3, -PETR3)
+  monthly_data <- monthly_data %>% select(-Data, -IBOV,  -BRKM5, -CSNA3, -EGIE3, -GOAU4, -TIMS3, -USIM5, -VALE3, -BBDC3, -ELET3, -PETR3)
   monthly_data <- monthly_data[-nrow(monthly_data),]
 }
 

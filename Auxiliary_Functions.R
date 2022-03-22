@@ -2,6 +2,10 @@
 ###    Auxiliary Functions    ###
 #################################
 
+ir <- function(x) {
+  mean(x)/sd(x)
+}
+
 covariance_method <- function(x, method = 1) {
   Sigma_est <- switch(method,
                       cov(x),

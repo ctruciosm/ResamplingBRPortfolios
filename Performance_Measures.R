@@ -16,7 +16,7 @@ medidas <- function(x, MAR = 0) {
   # Sortino Ratio
   #SO <- AV/sqrt(mean(ifelse(x < 0, 0, x^2)))
   SO <- mean(x)/sqrt(mean(ifelse(x < 0, 0, x^2)))
-  output <- c(AV, SD, SR, ASR, SO)
+  output <- c(12*AV, sqrt(12)*SD, SR, ASR, SO)
   return(output)
 }
 

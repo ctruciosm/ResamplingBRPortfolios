@@ -36,12 +36,10 @@ source("Auxiliary_Functions.R")
            Data = str_replace(Data, "Nov", "11"), 
            Data = str_replace(Data, "Dez", "12")) %>% 
     mutate(Data = lubridate::my(Data)) %>% 
-    filter(Data >= '2000-01-01')
+    filter(Data >= '2000-01-01', Data <= '2022-02-01')
   monthly_data <- monthly_data %>% select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
   ibovespa <- monthly_data %>% select(IBOV)
-  monthly_data <- monthly_data %>% select(-Data, -IBOV)
-  monthly_data <- monthly_data[-nrow(monthly_data),]
-  ibovespa <- ibovespa[-nrow(monthly_data),]
+  monthly_data <- monthly_data %>% select(-Data, -IBOV,  -BRKM5, -CSNA3, -EGIE3, -GOAU4, -TIMS3, -USIM5, -VALE3, -BBDC3, -ELET3, -PETR3)
 }
 
 
@@ -49,7 +47,7 @@ source("Auxiliary_Functions.R")
 InS <- 60
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
-nboot <- 250
+nboot <- 500
 nmethods <- 7
 
 #######################################
@@ -61,7 +59,7 @@ Rport <- matrix(NA, nrow = OoS, ncol = nconstrains*nmethods)
 w_measures <- matrix(0, nrow = OoS, ncol = 2*nconstrains*nmethods)
 for (i in 1:OoS) {
   print(i)
-  set.seed(i + 1234)
+  set.seed(i + 4321)
   r_ins <- as.matrix(monthly_data[i:(InS - 1 + i), ])
   r_oos <- as.numeric(monthly_data[InS - 1 + i + 1, ]) 
   ibov <- as.matrix(ibovespa[i:(InS - 1 + i), ])
@@ -141,3 +139,21 @@ t(oos_results) %>%
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "luc_mvp") %>% 
   save_kable(keep_tex = T, file = paste0("Results/luc_mvp.tex"))
+
+
+
+# Bootstrap Tests
+load("./Results/Var/Var.RData")
+load("./Results/SharpeR/Sharpe.RData")
+R = read.csv("./Results/Rport.csv")
+Rtwo = R %>% select(ssc_FactorNonPIbov, ssc_Markowitz)
+Rtwo = Rtwo[-c(1:120),]
+hac.inference.log.var(Rtwo)
+set.seed(123)
+boot.time.inference.log.var(ret = Rtwo,b = 5, M = 12)
+
+library(ggplot2)
+Rtwo %>% 
+  ggplot() + geom_line(aes(x = 1:206, y = cumsum(ssc_FactorNonPIbov)) , color = "red") +
+  geom_line(aes(x = 1:206, y = cumsum(ssc_Markowitz)) , color = "blue")
+block.size.calibrate(Rtwo)
