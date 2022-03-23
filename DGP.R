@@ -60,5 +60,5 @@ dgp <- function(nobs = 60, p = 10, set_par) {
   mu <- alpha + mu_f %*% betas
   Sigma <-  Sigma2_F*t(betas) %*% betas  + Sigma_e
   Sigma <- 0.5*Sigma + 0.5*t(Sigma)
-  return(list(returns[1:nobs, ], Sigma, mu, returns[-c(1:nobs), ], c(one_factor[2:nobs, ],0)))
+  return(list(returns[1:nobs, ], Sigma, mu, returns[-c(1:nobs), ], c(one_factor[2:nobs, ],NA)))
 }
