@@ -13,6 +13,7 @@ library(lubridate)
 library(POET)
 library(Matrix)
 library(kableExtra)
+library(FinTS)
 source("Resampling_Techniques.R")
 source("Performance_Measures.R")
 source("Auxiliary_Functions.R")
@@ -37,18 +38,30 @@ source("Auxiliary_Functions.R")
            Data = str_replace(Data, "Dez", "12")) %>% 
     mutate(Date = lubridate::my(Data)) %>% 
     mutate_if(is.character, as.numeric) %>% 
-    filter(Date >= '2000-01-01', Date <= '2022-01-01')
+    filter(Date >= '1996-01-01', Date <= '2022-01-01')
   monthly_data <- monthly_data %>% 
     select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) %>% 
-    filter(Date >= '2000-01-01', Date <= '2022-01-01') %>% 
+    filter(Date >= '1996-01-01', Date <= '2022-01-01') %>% 
     select(-Date)
   
   famafrench <- read.csv("Data/F-F_Research_Data_Factors.csv") %>% 
     mutate(Date = lubridate::ym(Date)) %>% 
-    filter(Date >= '2000-01-01', Date <= '2022-01-01') %>% 
+    filter(Date >= '1996-01-01', Date <= '2022-01-01') %>% 
     select(-Date)
 }
 
+monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")
+
+
+assets_names <- 
+  monthly_data_longer %>% 
+  group_by(assets) %>% 
+  summarise(LjungBox = Box.test(returns, type =  "Ljung-Box")$p.value,
+            LjungBox2 = Box.test(returns^2, type =  "Ljung-Box")$p.value) %>% 
+  filter(LjungBox > 0.05, LjungBox2 > 0.05) %>% 
+  select(assets)
+
+monthly_data <-  monthly_data %>% select(as.vector(as.matrix(assets_names)))
 
 InS <- 120
 OoS <- nrow(monthly_data) - InS
@@ -151,13 +164,13 @@ t(oos_results) %>%
 
 
 # Bootstrap Tests
-load("./Results/Var/Var.RData")
-load("./Results/SharpeR/Sharpe.RData")
-R = read.csv("./Results/Rport.csv")
-Rtwo = R %>% select(ssc_FactorNonPIbov, ssc_Markowitz)
-hac.inference.log.var(Rtwo)
-set.seed(123)
-boot.time.inference.log.var(ret = Rtwo,b = 5, M = 12)
+# load("./Results/Var/Var.RData")
+# load("./Results/SharpeR/Sharpe.RData")
+# R = read.csv("./Results/Rport.csv")
+# Rtwo = R %>% select(ssc_FactorNonPIbov, ssc_Markowitz)
+# hac.inference.log.var(Rtwo)
+# set.seed(123)
+# boot.time.inference.log.var(ret = Rtwo,b = 5, M = 12)
 
 library(ggplot2)
 Rtwo %>% 
