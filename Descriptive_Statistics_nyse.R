@@ -14,7 +14,7 @@ library(ggplot2)
 
 # Importing and Wrangling  Data
 {
-  monthly_data <- read_xlsx("Data/economatica.xlsx", na = "-")
+  monthly_data <- read_xlsx("Data/economatica_nyse.xlsx",  skip = 3)
   colnames(monthly_data) <- str_replace(colnames(monthly_data), "Retorno\ndo fechamento\nem 1 mês\nEm moeda orig\najust p/ prov\n", "")
   
   monthly_data <- monthly_data %>%
@@ -30,12 +30,13 @@ library(ggplot2)
            Data = str_replace(Data, "Out", "10"),
            Data = str_replace(Data, "Nov", "11"), 
            Data = str_replace(Data, "Dez", "12")) %>% 
-    mutate(Data = lubridate::my(Data)) %>% 
-    filter(Data >= '2006-01-01', Data <= '2022-02-01')
-  monthly_data <- monthly_data %>% select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
-  monthly_data_dates <- monthly_data %>% select(-IBOV)
-  monthly_data <- monthly_data %>% select(-Data, -IBOV)
-  monthly_data <- monthly_data[-nrow(monthly_data),]
+    mutate(Date = lubridate::my(Data)) %>% 
+    mutate_if(is.character, as.numeric) %>% 
+    filter(Date >= '1995-01-01', Date <= '2022-01-01')
+  monthly_data <- monthly_data %>% 
+    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) %>% 
+    filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
+    select(-Date)
 }
 
 monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")

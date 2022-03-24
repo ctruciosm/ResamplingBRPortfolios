@@ -1,7 +1,7 @@
 ###################################
 ###   Monte Carlo Experiments   ###
 ###################################
-
+setwd("/Volumes/CTRUCIOS_SD/Ongoing Research/Resampling Portfolios/ResamplingBRPortfolios/")
 rm(list = ls())
 library(mvtnorm)
 library(RiskPortfolios)
@@ -18,7 +18,7 @@ source("Resampling_Techniques.R")
 
 # Setup
 MC <- 1000
-nassets <- 7
+nassets <- 50
 ntotal <- 60
 nboot <- 500
 
@@ -75,8 +75,8 @@ MonteCarloExperiment <- function(MC, nassets, ntotal, nboot, option) {
   write.csv(w_estim, paste0(newfolder, "/", option,"w_estim", nassets, "_", ntotal, ".csv"))
   write.csv(w_bootparam, paste0(newfolder, "/", option,"w_bootparam", nassets, "_", ntotal, ".csv"))
   write.csv(w_boot, paste0(newfolder, "/", option,"w_boot", nassets, "_", ntotal, ".csv"))
-  write.csv(w_factor_bootparam, paste0(newfolder, "/", option,"w_factor_bootparam", nassets, "_", ntotal, ".csv"))
-  write.csv(w_factor_boot, paste0(newfolder, "/", option,"w_factor_boot", nassets, "_", ntotal, ".csv"))
+  #write.csv(w_factor_bootparam, paste0(newfolder, "/", option,"w_factor_bootparam", nassets, "_", ntotal, ".csv"))
+  #write.csv(w_factor_boot, paste0(newfolder, "/", option,"w_factor_boot", nassets, "_", ntotal, ".csv"))
   write.csv(w_factor_bootparam_obsfactor, paste0(newfolder, "/", option,"w_factor_bootparam_obsfactor", nassets, "_", ntotal, ".csv"))
   write.csv(w_factor_boot_obsfactor, paste0(newfolder, "/", option,"w_factor_boot_obsfactor", nassets, "_", ntotal, ".csv"))
   write.table(SDoos_performance, paste0(newfolder, "/", option,"SDoos_performance", nassets, "_", ntotal, ".csv"), col.names = TRUE, sep = ",")

@@ -58,7 +58,7 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, option_list =
     eigen_vectors <- matrix(t(eigen_decomposition$vectors[,1:n_factors]), nrow = n_factors)
     factors <- x %*% t(eigen_vectors)
   } else {
-    n_factors <- 1
+    n_factors <- ncol(factors)
   }
   model <- lm(as.matrix(x[-1, ]) ~ factors[-nobs, ])
   alpha_hat <- coef(model)[1,]
@@ -105,7 +105,7 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, option_list = list(type 
     eigen_vectors <- matrix(t(eigen_decomposition$vectors[,1:n_factors]), nrow = n_factors)
     factors <- x %*% t(eigen_vectors)
   } else {
-    n_factors <- 1
+    n_factors <- ncol(factors)
   }
   model <- lm(as.matrix(x[-1, ]) ~ factors[-nobs, ])
   alpha_hat <- coef(model)[1,]

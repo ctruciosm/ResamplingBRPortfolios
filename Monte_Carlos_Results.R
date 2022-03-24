@@ -4,11 +4,12 @@
 library(stringr)
 library(tidyr)
 library(ggplot2)
-setwd("./MC_d5_n60")
+setwd("./MC_d7_n60")
 
-pattern <- "short_sales"
+pattern <- "bounded"
 filenames <- list.files(pattern = "*.csv", full.names = TRUE)
 filenames <- filenames[str_detect(filenames, pattern)]
+filenames <- filenames[str_detect(filenames, "_w")]
 
 w <- read.csv(filenames[1])[,-1]
 n_methods <- length(filenames)
@@ -24,6 +25,7 @@ for (j in 2:n_methods) {
 
 pattern2 <- paste0("./", pattern, "_mvp_w_")
 names <- str_replace(str_replace(filenames[-1], paste0("5_60", ".csv"), ""), pattern2, "")
+names <- c("Michaud NP", "Michaud", "Markowitz", "Factor NP", "Factor")
 colnames(rmse) <- names
 colnames(mae) <- names
 
@@ -34,7 +36,7 @@ pivot_longer(data.frame(rmse), cols = 1:(n_methods - 1), names_to = "method") %>
   ggplot() + 
   geom_boxplot(aes(x = method, y = value, fill = method)) + 
   ylab("RMSE") + xlab("") +
-  theme(legend.position = "bottom", legend.title = element_blank())
+  theme(legend.position = "none", legend.title = element_blank())
 ggsave(paste0("rmse", pattern, ".pdf"), width = 30, height = 21, units = "cm")
 
 
@@ -42,5 +44,5 @@ pivot_longer(data.frame(mae), cols = 1:(n_methods - 1), names_to = "method") %>%
   ggplot() + 
   geom_boxplot(aes(x = method, y = value, fill = method)) + 
   ylab("MAE") + xlab("") +
-  theme(legend.position = "bottom", legend.title = element_blank())
+  theme(legend.position = "none", legend.title = element_blank())
 ggsave(paste0("mae", pattern, ".pdf"), width = 30, height = 21, units = "cm")

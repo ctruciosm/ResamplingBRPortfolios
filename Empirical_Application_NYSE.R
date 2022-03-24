@@ -19,7 +19,7 @@ source("Auxiliary_Functions.R")
 
 # Importing and Wrangling  Data
 {
-  monthly_data <- read_xlsx("Data/economatica.xlsx", na = "-")
+  monthly_data <- read_xlsx("Data/economatica_nyse.xlsx",  skip = 3)
   colnames(monthly_data) <- str_replace(colnames(monthly_data), "Retorno\ndo fechamento\nem 1 mês\nEm moeda orig\najust p/ prov\n", "")
   
   monthly_data <- monthly_data %>%
@@ -35,16 +35,22 @@ source("Auxiliary_Functions.R")
            Data = str_replace(Data, "Out", "10"),
            Data = str_replace(Data, "Nov", "11"), 
            Data = str_replace(Data, "Dez", "12")) %>% 
-    mutate(Data = lubridate::my(Data)) %>% 
-    filter(Data >= '2006-01-01', Data <= '2022-02-01')
-  monthly_data <- monthly_data %>% select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
-  ibovespa <- monthly_data %>% select(IBOV)
-  monthly_data <- monthly_data %>% select(-Data, -IBOV,  -BRKM5, -CSNA3, -EGIE3, -GOAU4, -TIMS3, -USIM5, -VALE3, -BBDC3, -ELET3, -PETR3)
+    mutate(Date = lubridate::my(Data)) %>% 
+    mutate_if(is.character, as.numeric) %>% 
+    filter(Date >= '2000-01-01', Date <= '2022-01-01')
+  monthly_data <- monthly_data %>% 
+    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) %>% 
+    filter(Date >= '2000-01-01', Date <= '2022-01-01') %>% 
+    select(-Date)
+  
+  famafrench <- read.csv("Data/F-F_Research_Data_Factors.csv") %>% 
+    mutate(Date = lubridate::ym(Date)) %>% 
+    filter(Date >= '2000-01-01', Date <= '2022-01-01') %>% 
+    select(-Date)
 }
 
 
-
-InS <- 60
+InS <- 120
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
 nboot <- 500
@@ -54,53 +60,55 @@ nmethods <- 7
 ###   Minimum Variance Portfolios   ###
 #######################################
 nconstrains <- 3
-w_estim = w_bootparam = w_boot = w_factor_bootparam_pca = w_factor_boot_pca = w_factor_bootparam_ibov = w_factor_boot_ibov = matrix(NA, nrow = OoS, ncol = nconstrains*p)
+w_estim = w_bootparam = w_boot = w_factor_bootparam_pca = w_factor_boot_pca = w_factor_bootparam_ff = w_factor_boot_ff = matrix(NA, nrow = OoS, ncol = nconstrains*p)
 Rport <- matrix(NA, nrow = OoS, ncol = nconstrains*nmethods)
 w_measures <- matrix(0, nrow = OoS, ncol = 2*nconstrains*nmethods)
 for (i in 1:OoS) {
   print(i)
   set.seed(i + 4321)
   r_ins <- as.matrix(monthly_data[i:(InS - 1 + i), ])
+  ff <- as.matrix(famafrench[i:(InS - 1 + i), ])
   r_oos <- as.numeric(monthly_data[InS - 1 + i + 1, ]) 
-  ibov <- as.matrix(ibovespa[i:(InS - 1 + i), ])
-  weights_unc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol'), nboot, factors = ibov)
-  weights_ssc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot, factors = ibov)
-  weights_luc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(0.1, p)), nboot, factors = ibov)
+  
+  weights_unc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol'), nboot, factors = ff)
+  weights_ssc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot, factors = ff)
+  weights_luc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(3/p, p)), nboot, factors = ff)
   
   w_estim[i, ] <- c(weights_unc[1, ], weights_ssc[1, ], weights_luc[1, ])
   w_bootparam[i, ] <- c(weights_unc[2, ], weights_ssc[2, ], weights_luc[2, ])
   w_boot[i, ] <- c(weights_unc[3, ], weights_ssc[3, ], weights_luc[3, ])
   w_factor_bootparam_pca[i, ] <- c(weights_unc[4, ], weights_ssc[4, ], weights_luc[4, ])
   w_factor_boot_pca[i, ] <- c(weights_unc[5, ], weights_ssc[5, ], weights_luc[5, ])
-  w_factor_bootparam_ibov[i, ] <- c(weights_unc[6, ], weights_ssc[6, ], weights_luc[6, ])
-  w_factor_boot_ibov[i, ] <- c(weights_unc[7, ], weights_ssc[7, ], weights_luc[7, ])
+  w_factor_bootparam_ff[i, ] <- c(weights_unc[6, ], weights_ssc[6, ], weights_luc[6, ])
+  w_factor_boot_ff[i, ] <- c(weights_unc[7, ], weights_ssc[7, ], weights_luc[7, ])
   
+   
   if (i > 1) {
     w_measures[i, ] <- c(unlist(weights_measures(w_estim[i - 1, 1:p], w_estim[i, 1:p], r_oos)),
                          unlist(weights_measures(w_bootparam[i - 1, 1:p], w_bootparam[i, 1:p], r_oos)),
                          unlist(weights_measures(w_boot[i - 1, 1:p], w_boot[i, 1:p], r_oos)),
                          unlist(weights_measures(w_factor_bootparam_pca[i - 1, 1:p], w_factor_bootparam_pca[i, 1:p], r_oos)),
                          unlist(weights_measures(w_factor_boot_pca[i - 1, 1:p], w_factor_boot_pca[i, 1:p], r_oos)),
-                         unlist(weights_measures(w_factor_bootparam_ibov[i - 1, 1:p], w_factor_bootparam_ibov[i, 1:p], r_oos)),
-                         unlist(weights_measures(w_factor_boot_ibov[i - 1, 1:p], w_factor_boot_ibov[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam_ff[i - 1, 1:p], w_factor_bootparam_ff[i, 1:p], r_oos)),
+                         unlist(weights_measures(w_factor_boot_ff[i - 1, 1:p], w_factor_boot_ff[i, 1:p], r_oos)),
                          unlist(weights_measures(w_estim[i - 1, (p + 1):(2*p)], w_estim[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_bootparam[i - 1, (p + 1):(2*p)], w_bootparam[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_boot[i - 1, (p + 1):(2*p)], w_boot[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_factor_bootparam_pca[i - 1, (p + 1):(2*p)], w_factor_bootparam_pca[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_factor_boot_pca[i - 1, (p + 1):(2*p)], w_factor_boot_pca[i, (p + 1):(2*p)], r_oos)),
-                         unlist(weights_measures(w_factor_bootparam_ibov[i - 1, (p + 1):(2*p)], w_factor_bootparam_ibov[i, (p + 1):(2*p)], r_oos)),
-                         unlist(weights_measures(w_factor_boot_ibov[i - 1, (p + 1):(2*p)], w_factor_boot_ibov[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_bootparam_ff[i - 1, (p + 1):(2*p)], w_factor_bootparam_ff[i, (p + 1):(2*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot_ff[i - 1, (p + 1):(2*p)], w_factor_boot_ff[i, (p + 1):(2*p)], r_oos)),
                          unlist(weights_measures(w_estim[i - 1, (2*p + 1):(3*p)], w_estim[i, (2*p + 1):(3*p)], r_oos)),
                          unlist(weights_measures(w_bootparam[i - 1, (2*p + 1):(3*p)], w_bootparam[i, (2*p + 1):(3*p)], r_oos)),
                          unlist(weights_measures(w_boot[i - 1, (2*p + 1):(3*p)], w_boot[i, (2*p + 1):(3*p)], r_oos)),
                          unlist(weights_measures(w_factor_bootparam_pca[i - 1, (2*p + 1):(3*p)], w_factor_bootparam_pca[i, (2*p + 1):(3*p)], r_oos)),
                          unlist(weights_measures(w_factor_boot_pca[i - 1, (2*p + 1):(3*p)], w_factor_boot_pca[i, (2*p + 1):(3*p)], r_oos)),
-                         unlist(weights_measures(w_factor_bootparam_ibov[i - 1, (2*p + 1):(3*p)], w_factor_bootparam_ibov[i, (2*p + 1):(3*p)], r_oos)),
-                         unlist(weights_measures(w_factor_boot_ibov[i - 1, (2*p + 1):(3*p)], w_factor_boot_ibov[i, (2*p + 1):(3*p)], r_oos)))
+                         unlist(weights_measures(w_factor_bootparam_ff[i - 1, (2*p + 1):(3*p)], w_factor_bootparam_ff[i, (2*p + 1):(3*p)], r_oos)),
+                         unlist(weights_measures(w_factor_boot_ff[i - 1, (2*p + 1):(3*p)], w_factor_boot_ff[i, (2*p + 1):(3*p)], r_oos)))
   }
-  Rport[i,] <-  c(r_oos %*% w_estim[i, 1:p], r_oos %*% w_bootparam[i, 1:p], r_oos %*% w_boot[i, 1:p], r_oos %*% w_factor_bootparam_pca[i, 1:p], r_oos %*% w_factor_boot_pca[i, 1:p], r_oos %*% w_factor_bootparam_ibov[i, 1:p], r_oos %*% w_factor_boot_ibov[i, 1:p],
-                 r_oos %*% w_estim[i, (p + 1):(2 * p)], r_oos %*% w_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_boot[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam_pca[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot_pca[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam_ibov[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot_ibov[i, (p + 1):(2 * p)],
-                 r_oos %*% w_estim[i, (2 * p + 1):(3 * p)], r_oos %*% w_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_boot[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam_pca[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot_pca[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam_ibov[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot_ibov[i, (2 * p + 1):(3 * p)])
+  Rport[i,] <-  c(r_oos %*% w_estim[i, 1:p], r_oos %*% w_bootparam[i, 1:p], r_oos %*% w_boot[i, 1:p], r_oos %*% w_factor_bootparam_pca[i, 1:p], r_oos %*% w_factor_boot_pca[i, 1:p], r_oos %*% w_factor_bootparam_ff[i, 1:p], r_oos %*% w_factor_boot_ff[i, 1:p],
+                 r_oos %*% w_estim[i, (p + 1):(2 * p)], r_oos %*% w_bootparam[i, (p + 1):(2 * p)], r_oos %*% w_boot[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam_pca[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot_pca[i, (p + 1):(2 * p)], r_oos %*% w_factor_bootparam_ff[i, (p + 1):(2 * p)], r_oos %*% w_factor_boot_ff[i, (p + 1):(2 * p)],
+                 r_oos %*% w_estim[i, (2 * p + 1):(3 * p)], r_oos %*% w_bootparam[i, (2 * p + 1):(3 * p)], r_oos %*% w_boot[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam_pca[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot_pca[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_bootparam_ff[i, (2 * p + 1):(3 * p)], r_oos %*% w_factor_boot_ff[i, (2 * p + 1):(3 * p)])
 }
 
 # Saving Results
@@ -147,13 +155,11 @@ load("./Results/Var/Var.RData")
 load("./Results/SharpeR/Sharpe.RData")
 R = read.csv("./Results/Rport.csv")
 Rtwo = R %>% select(ssc_FactorNonPIbov, ssc_Markowitz)
-Rtwo = Rtwo[-c(1:120),]
 hac.inference.log.var(Rtwo)
 set.seed(123)
 boot.time.inference.log.var(ret = Rtwo,b = 5, M = 12)
 
 library(ggplot2)
 Rtwo %>% 
-  ggplot() + geom_line(aes(x = 1:206, y = cumsum(ssc_FactorNonPIbov)) , color = "red") +
-  geom_line(aes(x = 1:206, y = cumsum(ssc_Markowitz)) , color = "blue")
-block.size.calibrate(Rtwo)
+  ggplot() + geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_FactorNonPIbov)) , color = "red") +
+  geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_Markowitz)) , color = "blue")

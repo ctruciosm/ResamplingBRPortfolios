@@ -34,8 +34,8 @@ calculate_portfolio_weights <- function(x, constrains_opt, nboot, factors = ibov
   k <- POETKhat(t(x))$K1HL
   w_factor_bootparam <- factor_parametric_bootstrap(x, B = nboot, n_factors  = k, option_list = constrains_opt, factors = NULL) 
   w_factor_boot <- factor_bootstrap(x, B = nboot, n_factors  = k, option_list = constrains_opt, factors = NULL) 
-  w_factor_bootparam_ibov <- factor_parametric_bootstrap(x, B = nboot, n_factors  = k, option_list = constrains_opt, factors) 
-  w_factor_boot_ibov <- factor_bootstrap(x, B = nboot, n_factors  = k, option_list = constrains_opt, factors) 
+  w_factor_bootparam_obsfactors <- factor_parametric_bootstrap(x, B = nboot, n_factors  = NULL, option_list = constrains_opt, factors) 
+  w_factor_boot_obsfactors <- factor_bootstrap(x, B = nboot, n_factors  = NULL, option_list = constrains_opt, factors) 
   
-  return(rbind(w_estim, w_bootparam, w_boot, w_factor_bootparam, w_factor_boot, w_factor_bootparam_ibov, w_factor_boot_ibov))
+  return(rbind(w_estim, w_bootparam, w_boot, w_factor_bootparam, w_factor_boot, w_factor_bootparam_obsfactors, w_factor_boot_obsfactors))
 }
