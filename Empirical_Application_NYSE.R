@@ -4,6 +4,7 @@
 rm(list = ls())
 library(dplyr)
 library(mvtnorm)
+library(moments)
 library(RiskPortfolios)
 library(tidyr)
 library(readxl)
@@ -44,7 +45,7 @@ source("Auxiliary_Functions.R")
     filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
     select(-Date)
   
-  famafrench <- read.csv("Data/F-F_Research_Data_Factors.csv") %>% 
+  famafrench <- read.csv("Data/F_F_Research_Data_Factors.CSV") %>% 
     mutate(Date = lubridate::ym(Date)) %>% 
     filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
     select(-Date)
