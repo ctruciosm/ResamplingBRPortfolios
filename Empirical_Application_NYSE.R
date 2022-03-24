@@ -13,7 +13,7 @@ library(lubridate)
 library(POET)
 library(Matrix)
 library(kableExtra)
-library(FinTS)
+library(nortsTest)
 source("Resampling_Techniques.R")
 source("Performance_Measures.R")
 source("Auxiliary_Functions.R")
@@ -38,15 +38,15 @@ source("Auxiliary_Functions.R")
            Data = str_replace(Data, "Dez", "12")) %>% 
     mutate(Date = lubridate::my(Data)) %>% 
     mutate_if(is.character, as.numeric) %>% 
-    filter(Date >= '1996-01-01', Date <= '2022-01-01')
+    filter(Date >= '1995-01-01', Date <= '2022-01-01')
   monthly_data <- monthly_data %>% 
     select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) %>% 
-    filter(Date >= '1996-01-01', Date <= '2022-01-01') %>% 
+    filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
     select(-Date)
   
   famafrench <- read.csv("Data/F-F_Research_Data_Factors.csv") %>% 
     mutate(Date = lubridate::ym(Date)) %>% 
-    filter(Date >= '1996-01-01', Date <= '2022-01-01') %>% 
+    filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
     select(-Date)
 }
 
@@ -128,7 +128,7 @@ for (i in 1:OoS) {
 colnames(Rport) <- c("unc_Markowitz", "unc_MichaudParam", "unc_MichaudNonP", "unc_FactorParamPCA", "unc_FactorNonPPCA", "unc_FactorParamIbov", "unc_FactorNonPIbov",
                      "ssc_Markowitz", "ssc_MichaudParam", "ssc_MichaudNonP", "ssc_FactorParamPCA", "ssc_FactorNonPPCA", "ssc_FactorParamIbov", "ssc_FactorNonPIbov",
                      "luc_Markowitz", "luc_MichaudParam", "luc_MichaudNonP", "luc_FactorParamPCA", "luc_FactorNonPPCA", "luc_FactorParamIbov", "luc_FactorNonPIbov")
-write.table(Rport, "Results/Rport.csv", sep = ",")
+write.table(Rport, paste0("Results/Rport_", InS, ".csv"), sep = ",")
 
 
 # Tables for unscontrained MVP
@@ -139,7 +139,9 @@ colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Param
 t(oos_results) %>% 
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "unc_mvp") %>% 
-  save_kable(keep_tex = T, file = paste0("Results/unc_mvp.tex"))
+  save_kable(keep_tex = T, file = paste0("Results/unc_mvp_", InS, ".tex"))
+
+
 
 # Tables for short-selling MVP
 Caption <- "Out-of-sample performance measures of the minimum variance portfolio with short-selling constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
@@ -149,7 +151,7 @@ colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Param
 t(oos_results) %>% 
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "ssc_mvp") %>% 
-  save_kable(keep_tex = T, file = paste0("Results/ssc_mvp.tex"))
+  save_kable(keep_tex = T, file = paste0("Results/ssc_mvp_", InS, ".tex"))
 
 # Tables for lower-upper MVP
 Caption <- "Out-of-sample performance measures of the minimum variance portfolio with lower (0) and upper (10) bound constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
@@ -159,7 +161,7 @@ colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Param
 t(oos_results) %>% 
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "luc_mvp") %>% 
-  save_kable(keep_tex = T, file = paste0("Results/luc_mvp.tex"))
+  save_kable(keep_tex = T, file = paste0("Results/luc_mvp_", InS, ".tex"))
 
 
 
@@ -172,7 +174,7 @@ t(oos_results) %>%
 # set.seed(123)
 # boot.time.inference.log.var(ret = Rtwo,b = 5, M = 12)
 
-library(ggplot2)
-Rtwo %>% 
-  ggplot() + geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_FactorNonPIbov)) , color = "red") +
-  geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_Markowitz)) , color = "blue")
+#library(ggplot2)
+#Rtwo %>% 
+#  ggplot() + geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_FactorNonPIbov)) , color = "red") +
+#  geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_Markowitz)) , color = "blue")
