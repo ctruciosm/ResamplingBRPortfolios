@@ -19,7 +19,7 @@ source("Auxiliary_Functions.R")
 
 # Importing and Wrangling  Data
 {
-  monthly_data <- read_xlsx("Data/economatica.xlsx", na = "-")
+  monthly_data <- read_xlsx("Data/economatica_ibov.xlsx", na = "-")
   colnames(monthly_data) <- str_replace(colnames(monthly_data), "Retorno\ndo fechamento\nem 1 mês\nEm moeda orig\najust p/ prov\n", "")
   
   monthly_data <- monthly_data %>%
@@ -36,11 +36,25 @@ source("Auxiliary_Functions.R")
            Data = str_replace(Data, "Nov", "11"), 
            Data = str_replace(Data, "Dez", "12")) %>% 
     mutate(Data = lubridate::my(Data)) %>% 
-    filter(Data >= '2006-01-01', Data <= '2022-02-01')
-  monthly_data <- monthly_data %>% select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
-  ibovespa <- monthly_data %>% select(IBOV)
-  monthly_data <- monthly_data %>% select(-Data, -IBOV,  -BRKM5, -CSNA3, -EGIE3, -GOAU4, -TIMS3, -USIM5, -VALE3, -BBDC3, -ELET3, -PETR3)
+    filter(Data >= '2000-01-01', Data <= '2022-02-01')
+  monthly_data_dates <- monthly_data %>% 
+    select(names(which(apply(is.na(monthly_data), 2, sum) == 0)))
+  ibovespa <- monthly_data_dates %>% select(IBOV)
+  monthly_data <- monthly_data_dates %>% select(-Data, -IBOV)
 }
+
+monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")
+
+
+assets_names <- 
+  monthly_data_longer %>% 
+  group_by(assets) %>% 
+  summarise(LjungBox = Box.test(returns, type =  "Ljung-Box")$p.value,
+            LjungBox2 = Box.test(returns^2, type =  "Ljung-Box")$p.value) %>% 
+  filter(LjungBox > 0.05, LjungBox2 > 0.05) %>% 
+  select(assets)
+
+monthly_data <-  monthly_data %>% select(as.vector(as.matrix(assets_names)))
 
 
 
@@ -107,7 +121,7 @@ for (i in 1:OoS) {
 colnames(Rport) <- c("unc_Markowitz", "unc_MichaudParam", "unc_MichaudNonP", "unc_FactorParamPCA", "unc_FactorNonPPCA", "unc_FactorParamIbov", "unc_FactorNonPIbov",
                      "ssc_Markowitz", "ssc_MichaudParam", "ssc_MichaudNonP", "ssc_FactorParamPCA", "ssc_FactorNonPPCA", "ssc_FactorParamIbov", "ssc_FactorNonPIbov",
                      "luc_Markowitz", "luc_MichaudParam", "luc_MichaudNonP", "luc_FactorParamPCA", "luc_FactorNonPPCA", "luc_FactorParamIbov", "luc_FactorNonPIbov")
-write.table(Rport, "Results/Rport.csv", sep = ",")
+write.table(Rport, paste0("Results/Rport_", InS, "_ibov", ".csv"), sep = ",")
 
 
 # Tables for unscontrained MVP
@@ -118,7 +132,7 @@ colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Param
 t(oos_results) %>% 
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "unc_mvp") %>% 
-  save_kable(keep_tex = T, file = paste0("Results/unc_mvp.tex"))
+  save_kable(keep_tex = T, file = paste0("Results/unc_mvp_", InS, "_ibov.tex"))
 
 # Tables for short-selling MVP
 Caption <- "Out-of-sample performance measures of the minimum variance portfolio with short-selling constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
@@ -128,7 +142,7 @@ colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Param
 t(oos_results) %>% 
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "ssc_mvp") %>% 
-  save_kable(keep_tex = T, file = paste0("Results/ssc_mvp.tex"))
+  save_kable(keep_tex = T, file = paste0("Results/ssc_mvp_", InS ,"_ibov.tex"))
 
 # Tables for lower-upper MVP
 Caption <- "Out-of-sample performance measures of the minimum variance portfolio with lower (0) and upper (10) bound constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
@@ -138,22 +152,4 @@ colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Param
 t(oos_results) %>% 
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "luc_mvp") %>% 
-  save_kable(keep_tex = T, file = paste0("Results/luc_mvp.tex"))
-
-
-
-# Bootstrap Tests
-load("./Results/Var/Var.RData")
-load("./Results/SharpeR/Sharpe.RData")
-R = read.csv("./Results/Rport.csv")
-Rtwo = R %>% select(ssc_FactorNonPIbov, ssc_Markowitz)
-Rtwo = Rtwo[-c(1:120),]
-hac.inference.log.var(Rtwo)
-set.seed(123)
-boot.time.inference.log.var(ret = Rtwo,b = 5, M = 12)
-
-library(ggplot2)
-Rtwo %>% 
-  ggplot() + geom_line(aes(x = 1:206, y = cumsum(ssc_FactorNonPIbov)) , color = "red") +
-  geom_line(aes(x = 1:206, y = cumsum(ssc_Markowitz)) , color = "blue")
-block.size.calibrate(Rtwo)
+  save_kable(keep_tex = T, file = paste0("Results/luc_mvp_", InS, "_ibov.tex"))

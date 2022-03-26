@@ -11,6 +11,7 @@ library(kableExtra)
 library(corrplot)
 library(tseries)
 library(ggplot2)
+library(tsoutliers)
 
 # Importing and Wrangling  Data
 {
@@ -30,28 +31,38 @@ library(ggplot2)
            Data = str_replace(Data, "Out", "10"),
            Data = str_replace(Data, "Nov", "11"), 
            Data = str_replace(Data, "Dez", "12")) %>% 
-    mutate(Date = lubridate::my(Data)) %>% 
+    mutate(Data = lubridate::my(Data)) %>% 
     mutate_if(is.character, as.numeric) %>% 
-    filter(Date >= '1995-01-01', Date <= '2022-01-01')
-  monthly_data <- monthly_data %>% 
-    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) %>% 
-    filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
-    select(-Date)
+    filter(Data >= '1995-06-01', Data <= '2022-01-01')
+  
+  monthly_data_dates <- monthly_data %>% 
+    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
+  
+  monthly_data <- monthly_data_dates %>% select(-Data)
+  
 }
 
 monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")
 
+
+assets_names <- 
+  monthly_data_longer %>% 
+  group_by(assets) %>% 
+  summarise(LjungBox = Box.test(returns, type =  "Ljung-Box")$p.value,
+            LjungBox2 = Box.test(returns^2, type =  "Ljung-Box")$p.value) %>% 
+  filter(LjungBox > 0.05, LjungBox2 > 0.05) %>% 
+  select(assets)
+
+monthly_data <-  monthly_data %>% select(as.vector(as.matrix(assets_names)))
+monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")
+
+
 # Figure 1
 monthly_data_longer %>% 
-  mutate(Dates = rep(monthly_data_dates$Data[-1], ncol(monthly_data))) %>%
+  mutate(Dates = rep(monthly_data_dates$Data, ncol(monthly_data))) %>%
   ggplot() + geom_line(aes(x = Dates, y = returns, color = assets)) + 
-  ylab("Monthly returns") + theme(legend.position = "bottom", legend.title = element_blank())
-           
-monthly_data_longer %>% 
-  mutate(Dates = rep(monthly_data_dates$Data[-1], ncol(monthly_data))) %>%
-  ggplot() + geom_line(aes(x = Dates, y = returns, color = assets)) + 
-  facet_wrap(.~ assets) + 
-  ylab("Monthly returns") + theme(legend.position = "none")
+  ylab("Monthly returns") + theme_bw() + theme(legend.position = "none", legend.title = element_blank()) 
+ggsave("nyse_monthly_returns.pdf", width = 37, height = 21, units = "cm")           
 
 # Table 1
 monthly_data_longer %>% 
@@ -62,12 +73,7 @@ monthly_data_longer %>%
             sd = sd(returns),
             skewness = moments::skewness(returns),
             kurtosis = moments::kurtosis(returns),
-            Shapiro = shapiro.test(returns)$p.value,
-            LjungBox = Box.test(returns, lag = 1, type =  "Ljung-Box")$p.value,
-            LjungBox2 = Box.test(returns^2, lag = 1, type =  "Ljung-Box")$p.value) %>% 
-  knitr::kable(digits = 3, format = "latex", align = "lccccccccc",
+            JB = jarque.bera.test(returns)$p.value) %>% 
+  knitr::kable(digits = 3, format = "latex", align = "lccccccc",
                table.envir = "table", label = "descriptive_statistics") %>% 
-  save_kable(keep_tex = T, file = paste0("Results/descriptive_statistics.tex"))
-
-# Figure Appendix
-corrplot(cor(monthly_data), type = 'lower', number.cex = 0.6, addCoef.col = 'grey50', diag = FALSE, method = 'color')
+  save_kable(keep_tex = T, file = paste0("Results/descriptive_statistics_nyse.tex"))

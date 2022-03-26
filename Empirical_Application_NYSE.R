@@ -37,17 +37,18 @@ source("Auxiliary_Functions.R")
            Data = str_replace(Data, "Out", "10"),
            Data = str_replace(Data, "Nov", "11"), 
            Data = str_replace(Data, "Dez", "12")) %>% 
-    mutate(Date = lubridate::my(Data)) %>% 
+    mutate(Data = lubridate::my(Data)) %>% 
     mutate_if(is.character, as.numeric) %>% 
-    filter(Date >= '1995-01-01', Date <= '2022-01-01')
-  monthly_data <- monthly_data %>% 
-    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) %>% 
-    filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
-    select(-Date)
+    filter(Data >= '1995-06-01', Data <= '2022-01-01')
+  
+  monthly_data_dates <- monthly_data %>% 
+    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
+  
+  monthly_data <- monthly_data_dates %>% select(-Data)
   
   famafrench <- read.csv("Data/F_F_Research_Data_Factors.CSV") %>% 
     mutate(Date = lubridate::ym(Date)) %>% 
-    filter(Date >= '1995-01-01', Date <= '2022-01-01') %>% 
+    filter(Date >= '1995-06-01', Date <= '2022-01-01') %>% 
     select(-Date)
 }
 
@@ -163,19 +164,3 @@ t(oos_results) %>%
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "luc_mvp") %>% 
   save_kable(keep_tex = T, file = paste0("Results/luc_mvp_", InS, ".tex"))
-
-
-
-# Bootstrap Tests
-# load("./Results/Var/Var.RData")
-# load("./Results/SharpeR/Sharpe.RData")
-# R = read.csv("./Results/Rport.csv")
-# Rtwo = R %>% select(ssc_FactorNonPIbov, ssc_Markowitz)
-# hac.inference.log.var(Rtwo)
-# set.seed(123)
-# boot.time.inference.log.var(ret = Rtwo,b = 5, M = 12)
-
-#library(ggplot2)
-#Rtwo %>% 
-#  ggplot() + geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_FactorNonPIbov)) , color = "red") +
-#  geom_line(aes(x = 1:nrow(R), y = cumsum(ssc_Markowitz)) , color = "blue")
