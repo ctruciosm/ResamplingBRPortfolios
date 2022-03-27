@@ -65,7 +65,7 @@ assets_names <-
 
 monthly_data <-  monthly_data %>% select(as.vector(as.matrix(assets_names)))
 
-InS <- 60
+InS <- 120
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
 nboot <- 500
@@ -164,3 +164,4 @@ t(oos_results) %>%
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
                table.envir = "table", label = "luc_mvp") %>% 
   save_kable(keep_tex = T, file = paste0("Results/luc_mvp_", InS, ".tex"))
+

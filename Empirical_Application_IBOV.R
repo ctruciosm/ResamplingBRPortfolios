@@ -58,7 +58,7 @@ monthly_data <-  monthly_data %>% select(as.vector(as.matrix(assets_names)))
 
 
 
-InS <- 60
+InS <- 120
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
 nboot <- 500
