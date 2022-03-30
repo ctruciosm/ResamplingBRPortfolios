@@ -33,14 +33,15 @@ library(tsoutliers)
            Data = str_replace(Data, "Dez", "12")) %>% 
     mutate(Data = lubridate::my(Data)) %>% 
     filter(Data >= '2000-01-01', Data <= '2022-02-01')
+  
   monthly_data_dates <- monthly_data %>% 
-    select(names(which(apply(is.na(monthly_data), 2, sum) == 0)))
+    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
+  
   ibovespa <- monthly_data_dates %>% select(IBOV)
-  monthly_data <- monthly_data_dates %>% select(-Data, -IBOV)
+  monthly_data <- monthly_data_dates %>% select(-IBOV)
 }
 
-monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")
-
+monthly_data_longer <- pivot_longer(monthly_data, cols = ALPA4:VALE3, values_to = "returns", names_to = "assets")
 
 assets_names <- 
   monthly_data_longer %>% 
@@ -50,20 +51,21 @@ assets_names <-
   filter(LjungBox > 0.05, LjungBox2 > 0.05) %>% 
   select(assets)
 
-monthly_data <-  monthly_data %>% select(as.vector(as.matrix(assets_names)))
-monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")
+monthly_data <-  monthly_data_dates %>% select(Data, as.vector(as.matrix(assets_names)))
+monthly_data_longer <- pivot_longer(monthly_data, cols = ALPA4:VIVT3, values_to = "returns", names_to = "assets")
 
 
 # Figure 1
 monthly_data_longer %>% 
-  mutate(Dates = rep(monthly_data_dates$Data, ncol(monthly_data))) %>%
-  ggplot() + geom_line(aes(x = Dates, y = returns, color = assets)) + 
+  ggplot() + geom_line(aes(x = Data, y = returns, color = assets)) + 
+  xlab(" ") + 
   ylab("Monthly returns") + theme_bw() + theme(legend.position = "none", legend.title = element_blank())
-ggsave("ibov_monthly_returns.pdf", width = 37, height = 21, units = "cm")           
+ggsave("ibov_monthly_returns.pdf", width = 37, height = 19, units = "cm")           
 
 
 # Table 1
 monthly_data_longer %>% 
+  select(-Data) %>% 
   group_by(assets) %>% 
   summarise(minimum = min(returns),
             maximum = max(returns),
