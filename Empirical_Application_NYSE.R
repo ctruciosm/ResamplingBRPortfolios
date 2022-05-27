@@ -6,6 +6,7 @@ library(dplyr)
 library(mvtnorm)
 library(moments)
 library(RiskPortfolios)
+library(fPortfolio)
 library(tidyr)
 library(readxl)
 library(stringr)
@@ -54,8 +55,6 @@ source("Auxiliary_Functions.R")
     mutate(Date = lubridate::ym(Date)) %>% 
     filter(Date >= '1995-06-01', Date <= '2022-01-01') %>% 
     select(-Date)
-  
-  
 }
 
 monthly_data_longer <- pivot_longer(monthly_data, cols = everything(), values_to = "returns", names_to = "assets")
@@ -71,10 +70,10 @@ assets_names <-
 
 monthly_data <-  monthly_data %>% select(as.vector(as.matrix(assets_names)))
 
-InS <- 60
+InS <- 120
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
-nboot <- 500
+nboot <- 1000
 nmethods <- 9
 
 #######################################
@@ -93,7 +92,7 @@ for (i in 1:OoS) {
   observed_factors <- list(ff, ff5f)
   r_oos <- as.numeric(monthly_data[InS - 1 + i + 1, ]) 
   
-  set.seed(i + 4321)
+  set.seed(i + 1234)
   weights_unc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol'), nboot, factors = observed_factors)
   weights_ssc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'lo'), nboot, factors = observed_factors)
   weights_luc <- calculate_portfolio_weights(x = r_ins, constrains_opt = list(type = 'minvol', constraint = 'user', LB = rep(0, p), UB = rep(3/p, p)), nboot, factors = observed_factors)
