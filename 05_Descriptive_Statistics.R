@@ -14,31 +14,31 @@ library(ggplot2)
 library(tsoutliers)
 
 # Importing and Wrangling  Data
-{
-  monthly_data <- read_xlsx("Data/economatica_nyse.xlsx",  skip = 3)
-  colnames(monthly_data) <- str_replace(colnames(monthly_data), "Retorno\ndo fechamento\nem 1 mês\nEm moeda orig\najust p/ prov\n", "")
-  
-  monthly_data <- monthly_data %>%
-    mutate(Data = str_replace(Data, "Jan", "01"), 
-           Data = str_replace(Data, "Fev", "02"),
-           Data = str_replace(Data, "Mar", "03"), 
-           Data = str_replace(Data, "Abr", "04"),
-           Data = str_replace(Data, "Mai", "05"), 
-           Data = str_replace(Data, "Jun", "06"),
-           Data = str_replace(Data, "Jul", "07"), 
-           Data = str_replace(Data, "Ago", "08"),
-           Data = str_replace(Data, "Set", "09"), 
-           Data = str_replace(Data, "Out", "10"),
-           Data = str_replace(Data, "Nov", "11"), 
-           Data = str_replace(Data, "Dez", "12")) %>% 
-    mutate(Data = lubridate::my(Data)) %>% 
-    mutate_if(is.character, as.numeric) %>% 
-    filter(Data >= '1995-06-01', Data <= '2022-01-01')
-  
-  monthly_data_dates <- monthly_data %>% 
-    select(names(which(apply(is.na(monthly_data), 2, sum) == 0))) 
-}
-monthly_data_longer <- pivot_longer(monthly_data_dates, cols = ABT:DIS, values_to = "returns", names_to = "assets")
+monthly_data <- read_xlsx("Data/economatica_ibov.xlsx", na = "-")
+colnames(monthly_data) <- str_replace(colnames(monthly_data), "Retorno\ndo fechamento\nem 1 mês\nEm moeda orig\najust p/ prov\n", "")
+
+monthly_data <- monthly_data %>%
+  mutate(Data = str_replace(Data, "Jan", "01"), 
+         Data = str_replace(Data, "Fev", "02"),
+         Data = str_replace(Data, "Mar", "03"), 
+         Data = str_replace(Data, "Abr", "04"),
+         Data = str_replace(Data, "Mai", "05"), 
+         Data = str_replace(Data, "Jun", "06"),
+         Data = str_replace(Data, "Jul", "07"), 
+         Data = str_replace(Data, "Ago", "08"),
+         Data = str_replace(Data, "Set", "09"), 
+         Data = str_replace(Data, "Out", "10"),
+         Data = str_replace(Data, "Nov", "11"), 
+         Data = str_replace(Data, "Dez", "12")) %>% 
+  mutate(Data = lubridate::my(Data)) %>% 
+  dplyr::filter(Data >= '2000-01-01', Data <= '2022-02-01')
+
+monthly_data_dates <- monthly_data %>% 
+  dplyr::select(names(which(apply(is.na(monthly_data), 2, sum) == 0)))
+
+monthly_data <- monthly_data_dates %>% dplyr::select(-IBOV)
+
+monthly_data_longer <- pivot_longer(monthly_data_dates, cols = ALPA4:VALE3, values_to = "returns", names_to = "assets")
 
 assets_names <- 
   monthly_data_longer %>% 
@@ -49,7 +49,7 @@ assets_names <-
   select(assets)
 
 monthly_data <-  monthly_data_dates %>% select(Data, as.vector(as.matrix(assets_names)))
-monthly_data_longer <- pivot_longer(monthly_data, cols = ADM:TGT, values_to = "returns", names_to = "assets")
+monthly_data_longer <- pivot_longer(monthly_data, cols = ALPA4:VIVT3, values_to = "returns", names_to = "assets")
 
 
 # Figure 1
@@ -57,10 +57,10 @@ monthly_data_longer %>%
   ggplot() + geom_line(aes(x = Data, y = returns, color = assets)) + 
   xlab("") + 
   ylab("Monthly returns") + theme_bw() + theme(legend.position = "none", legend.title = element_blank()) 
-ggsave("nyse_monthly_returns.pdf", width = 37, height = 19, units = "cm")           
+ggsave("ibov_monthly_returns.pdf", width = 37, height = 19, units = "cm")           
 
 
-# Table 1
+# Table 
 monthly_data_longer %>% 
   select(-Data) %>% 
   group_by(assets) %>% 
