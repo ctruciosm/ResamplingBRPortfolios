@@ -1,9 +1,11 @@
 # ResamplingBRPortfolios
 
-Reproducible codes for the Paper of Oliveira, Trucíos and Valls (2022).
+Reproducible codes for the Paper of Oliveira, Trucíos and Valls (2022). 
 
-- `Empirical_Application.R` is the main code and perform the results in the empirical application. It calls functions in `Resampling_Techniques.R`, `Auxiliary_Functions.R` and `Performance_Measures.R`
-- `Resampling_Techniques` contains the portfolio resampling techniques used in the paper.
-- `Auxiliary_Functions.R` contains the auxiliary function `calculate_portfolio_weights` which runs all portfolio allocation methods (Markovitz, Michaud and Factor-Based). The functions receives three arguments: the returns, the constrains and the number of bootstrap replications.
-- `Performance_Measures.R` contains functions for the out-of-sample comparison (AV, SD, SR, ASR, SO, TO, SSPW).
+- `00_Data_Wrangling.R`: Clean and filter data for the period analised.
+- `01_Empirical_Application_IBOVESPA.R`: Table 2
+- `02_OoS_Figures.R`: Figures 2 and 3
+- `03_OoS_Test_ibov.R`: Statistical tests of Ledoit and Wolf (2011) and Ledoit and Wolf (2008)
+- `04_Descriptive_Statistics`: Figure 1 and Table 1
+
 

@@ -76,8 +76,6 @@ minvar_portfolio <- function(cov.mat) {
   return(round(weights,6))
 }
 
-
-
 medidas <- function(x, rf = 0.5) {
   # Annualized Average
   AV <- mean(x)
