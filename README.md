@@ -8,4 +8,8 @@ Reproducible codes for the Paper of Oliveira, Trucíos and Valls (2022).
 - `03_OoS_Test_ibov.R`: Statistical tests of Ledoit and Wolf (2011) and Ledoit and Wolf (2008)
 - `04_Descriptive_Statistics`: Figure 1 and Table 1
 
+> Due to Economatica License restrictions, the monthly returns data downloaded from Economatica is not available in this respository.
 
+## References
+
+- Oliveira, A., Trucíos, C., and Valls, P. (2022). _Does really resampling portfolios improve out-of-sample performance? evidence from the Brazilian market._ WP.

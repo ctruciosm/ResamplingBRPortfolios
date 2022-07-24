@@ -2,7 +2,6 @@
 ###     Data Wrangling       ###
 ################################
 
-setwd("/Volumes/CTRUCIOS_SD/Ongoing Research/Resampling Portfolios/ResamplingBRPortfolios")
 library(dplyr)
 library(tidyr)
 library(readxl)
