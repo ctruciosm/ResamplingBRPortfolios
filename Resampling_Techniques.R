@@ -27,7 +27,7 @@ michaud_parametric_bootstrap <- function(x, B = 500, type = "tp", riskfree = 0.0
     }
   }
   
-  return(w = round(colMeans(w_boot),6))
+  return(list(w = round(colMeans(w_boot),6), w_sd = apply(w_boot, 2, sd)))
 }
 
 # Michaud Non-Parametric Bootstrap
@@ -53,7 +53,7 @@ michaud_bootstrap <- function(x, B = 500, type = "tp", riskfree = 0.005, lambda 
     }
   }
 
-  return(w = round(colMeans(w_boot),6))
+  return(list(w = round(colMeans(w_boot),6), w_sd = apply(w_boot, 2, sd)))
 }
 
 # Conditional Factor Parametric Bootstrap
@@ -103,7 +103,7 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
     }
   }
   
-  return(w = round(colMeans(w_boot),6))
+  return(list(w = round(colMeans(w_boot),6), w_sd = apply(w_boot, 2, sd)))
 }
 
 # Conditional Factor Non-Parametric Bootstrap
@@ -152,6 +152,6 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
     }
   }
   
-  return(w = round(colMeans(w_boot),6))
+  return(list(w = round(colMeans(w_boot),6), w_sd = apply(w_boot, 2, sd)))
 }
 
