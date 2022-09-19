@@ -20,7 +20,7 @@ ibovespa <- read.csv("./Data/ibovespa.csv")
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 #       General Settings       #  
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-InS <- 120
+InS <- 60
 OoS <- nrow(monthly_data) - InS
 p <- ncol(monthly_data) 
 nboot <- 2000
@@ -154,7 +154,7 @@ colnames(Rport) <- c("mv_Markowitz", "mv_MichaudParam", "mv_MichaudNonP",
                     "ef_Markowitz", "ef_MichaudParam", "ef_MichaudNonP", 
                     "ef_MarkowitzPCA", "ef_FactorParamPCA", "ef_FactorNonPPCA", 
                     "ef_MarkowitzObs", "ef_FactorParamObs", "ef_FactorNonPObc")
-write.table(Rport, paste0("Results/Rport_", InS, "_ibov.csv"), sep = ",")
+write.table(Rport, paste0("Results/Rport_5_", InS, "_ibov.csv"), sep = ",")
 
 
 colnames(to) <- c("mv_Markowitz", "tp_Markowitz", "ef_Markowitz",
@@ -184,28 +184,28 @@ write.table(sspw, paste0("Results/sspw_", InS, "_ibov.csv"), sep = ",")
 
 # Tables for short-selling MVP
 Caption <- "Out-of-sample performance measures of the minimum variance portfolio with short-selling constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
-oos_results <- rbind(apply(Rport[,1:nmethods], 2, medidas, rf), 
-                     apply(to[, seq(1, nconstrains*nmethods, by = 3)], 2, mean), 
+oos_results <- rbind(apply(Rport[,1:nmethods], 2, medidas, rf),
+                     apply(to[, seq(1, nconstrains*nmethods, by = 3)], 2, mean),
                      apply(sspw[, seq(1, nconstrains*nmethods, by = 3)], 2, mean))
 row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
 colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric", "Markowitz-PCA", "Factor-Based Parametric PCA", "Factor-Based Non-Parametric PCA", "Markowitz-Ibov", "Factor-Based Parametric Ibov", "Factor-Based Non-Parametric Ibov")
-t(oos_results) %>% 
+t(oos_results) %>%
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
-               table.envir = "table", label = "ssc_mvp") %>% 
+               table.envir = "table", label = "ssc_mvp") %>%
   save_kable(keep_tex = T, file = paste0("Results/mvp_", InS, "_ibov.tex"))
 
 
 
 # Tables for short-selling TP
 Caption <- "Out-of-sample performance measures of the tangency portfolio with short-selling constraints: AV, SD, SR, ASR, SO, TO and SSPW stand for the average, standard deviation, Sharpe ratio, Adjusted Sharpe ratio, Sortino ratio, average turnover and average sum of squared portfolio weights, respectively."
-oos_results <- rbind(apply(Rport[,(nmethods + 1):(2*nmethods)], 2, medidas, rf),  
-                     apply(to[, seq(2, nconstrains*nmethods, by = 3)], 2, mean), 
+oos_results <- rbind(apply(Rport[,(nmethods + 1):(2*nmethods)], 2, medidas, rf),
+                     apply(to[, seq(2, nconstrains*nmethods, by = 3)], 2, mean),
                      apply(sspw[, seq(2, nconstrains*nmethods, by = 3)], 2, mean))
 row.names(oos_results) <- c("AV", "SD", "SR", "ASR", "SO", "TO", "SSPW")
 colnames(oos_results) <- c("Markowitz", "Michaud Parametric", "Michaud Non-Parametric", "Markowitz-PCA", "Factor-Based Parametric PCA", "Factor-Based Non-Parametric PCA", "Markowitz-Ibov", "Factor-Based Parametric Ibov", "Factor-Based Non-Parametric Ibov")
-t(oos_results) %>% 
+t(oos_results) %>%
   knitr::kable(digits = 4, format = "latex", align = "lccccccc", caption = Caption,
-               table.envir = "table", label = "ssc_tp") %>% 
+               table.envir = "table", label = "ssc_tp") %>%
   save_kable(keep_tex = T, file = paste0("Results/tp_", InS, "_ibov.tex"))
 
 # Tables for short-selling EF

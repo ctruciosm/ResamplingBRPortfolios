@@ -113,7 +113,7 @@ medidas <- function(x, rf = 0.5) {
   ASR <- SR*(1 + (moments::skewness(x)/6)*SR - ((moments::kurtosis(x) - 3)/24)*SR^2)
   # Sortino Ratio
   SO <- (mean(x) - rf)/sqrt(mean(ifelse(x - rf < 0, 0, (x - rf)^2)))
-  output <- c(12*AV, sqrt(12)*SD, SR, ASR, SO)
+  output <- c(12*AV, sqrt(12)*SD, sqrt(12)*SR, sqrt(12)*ASR, sqrt(12)*SO)
   return(output)
 }
 
