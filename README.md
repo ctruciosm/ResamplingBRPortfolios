@@ -12,4 +12,4 @@ Reproducible codes for the Paper of Oliveira, Trucíos and Valls (2022).
 
 ## References
 
-- Oliveira, A., Trucíos, C., and Valls, P. (2022). _Does really resampling portfolios improve out-of-sample performance? evidence from the Brazilian market._ WP.
+- Oliveira, A., Trucíos, C., and Valls, P. (2022). _Does portfolio resampling really improve out-of-sample performance? evidence from the Brazilian market._ (Submitted).
