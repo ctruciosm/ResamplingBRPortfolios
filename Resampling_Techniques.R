@@ -68,7 +68,7 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
   } else {
     n_factors <- ncol(factors)
   }
-  model <- lm(as.matrix(x) ~ factors)
+  model <- lm(as.matrix(x)[-1, ] ~ factors[1:(nobs - 1), ])
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
@@ -77,25 +77,25 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
   w_boot <- matrix(NA, ncol = p, nrow = B)
   
   for (j in 1:B) {
-    epsilon_boot <- rmvnorm(nobs, rep(0,p), Sigma_e_hat)
-    returns_boot <- matrix(rep(alpha_hat, nobs), ncol = p, byrow = TRUE) + factors %*% beta_hat + epsilon_boot
-    model_boot <- lm(as.matrix(returns_boot)~ factors)
+    epsilon_boot <- rmvnorm(nobs - 1, rep(0,p), Sigma_e_hat)
+    returns_boot <- matrix(rep(alpha_hat, nobs - 1), ncol = p, byrow = TRUE) + factors[1:(nobs - 1), ] %*% beta_hat + epsilon_boot
+    model_boot <- lm(as.matrix(returns_boot)~ factors[1:(nobs - 1), ])
     alpha_hat_boot <- coef(model_boot)[1, ]
     beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
     epsilon_hat_boot <-  model_boot$residuals
-    mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors, ncol = n_factors), 2, mean) %*% beta_hat_boot) 
+    mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
     Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
     Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
     Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
     w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
     while (any(is.na(w_boot[j, ])) || any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
-      epsilon_boot <- rmvnorm(nobs, rep(0,p), Sigma_e_hat)
-      returns_boot <- matrix(rep(alpha_hat, nobs), ncol = p, byrow = TRUE) + factors %*% beta_hat + epsilon_boot
-      model_boot <- lm(as.matrix(returns_boot)~ factors)
+      epsilon_boot <- rmvnorm(nobs - 1, rep(0,p), Sigma_e_hat)
+      returns_boot <- matrix(rep(alpha_hat, nobs - 1), ncol = p, byrow = TRUE) + factors[1:(nobs - 1), ] %*% beta_hat + epsilon_boot
+      model_boot <- lm(as.matrix(returns_boot)~ factors[1:(nobs - 1), ])
       alpha_hat_boot <- coef(model_boot)[1, ]
       beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
       epsilon_hat_boot <-  model_boot$residuals
-      mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors, ncol = n_factors), 2, mean) %*% beta_hat_boot) 
+      mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
       Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
       Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
       Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
@@ -118,7 +118,7 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
   } else {
     n_factors <- ncol(factors)
   }
-  model <- lm(as.matrix(x) ~ factors)
+  model <- lm(as.matrix(x)[-1, ] ~ factors[1:(nobs - 1), ])
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
@@ -126,25 +126,25 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
   w_boot <- matrix(NA, ncol = p, nrow = B)
   
   for (j in 1:B) {
-    epsilon_boot <- epsilon_hat[sample(1:nobs, nobs, replace = TRUE),]
-    returns_boot <- matrix(rep(alpha_hat, nobs), ncol = p, byrow = TRUE) + factors %*% beta_hat + epsilon_boot
-    model_boot <- lm(as.matrix(returns_boot)~ factors)
+    epsilon_boot <- epsilon_hat[sample(1:(nobs - 1), nobs - 1, replace = TRUE),]
+    returns_boot <- matrix(rep(alpha_hat, nobs - 1), ncol = p, byrow = TRUE) + factors[1:(nobs - 1), ] %*% beta_hat + epsilon_boot
+    model_boot <- lm(as.matrix(returns_boot)~ factors[1:(nobs - 1), ])
     alpha_hat_boot <- coef(model_boot)[1, ]
     beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
     epsilon_hat_boot <- model_boot$residuals
-    mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors, ncol = n_factors), 2, mean) %*% beta_hat_boot) 
+    mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
     Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
     Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
     Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
     w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
     while (any(is.na(w_boot[j, ])) || any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
-      epsilon_boot <- epsilon_hat[sample(1:nobs, nobs, replace = TRUE),]
-      returns_boot <- matrix(rep(alpha_hat, nobs), ncol = p, byrow = TRUE) + factors %*% beta_hat + epsilon_boot
-      model_boot <- lm(as.matrix(returns_boot)~ factors)
+      epsilon_boot <- epsilon_hat[sample(1:(nobs - 1), nobs - 1, replace = TRUE),]
+      returns_boot <- matrix(rep(alpha_hat, nobs - 1), ncol = p, byrow = TRUE) + factors[1:(nobs - 1), ] %*% beta_hat + epsilon_boot
+      model_boot <- lm(as.matrix(returns_boot)~ factors[1:(nobs - 1), ])
       alpha_hat_boot <- coef(model_boot)[1, ]
       beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
       epsilon_hat_boot <- model_boot$residuals
-      mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors, ncol = n_factors), 2, mean) %*% beta_hat_boot) 
+      mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
       Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
       Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
       Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))

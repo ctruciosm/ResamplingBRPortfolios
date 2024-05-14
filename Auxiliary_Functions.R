@@ -7,7 +7,7 @@ ir <- function(x) {
 
 calculate_portfolio_weights <- function(x, type = "tp", nboot, factors = NULL, riskfree = 0.005, lambda = 2) {
   nobs <- nrow(x)
-  
+  p <- ncol(x)
   w_estim <- markowitz_optimization(type, mu = colMeans(x), Sigma = cov(x), risk.free = riskfree, lambda)
   w_bootparam <- michaud_parametric_bootstrap(x, B = nboot, type, riskfree, lambda)
   w_boot <- michaud_bootstrap(x, B = nboot, type, riskfree, lambda) 
@@ -17,7 +17,7 @@ calculate_portfolio_weights <- function(x, type = "tp", nboot, factors = NULL, r
   eigen_decomposition <- eigen(1/(nobs - 1) * t(x_c) %*% x_c)
   eigen_vectors <- matrix(t(eigen_decomposition$vectors[,1:k]), nrow = k)
   pca_factors <- x %*% t(eigen_vectors)
-  model <- lm(as.matrix(x) ~ pca_factors)
+  model <- lm(as.matrix(x)[-1, ] ~ pca_factors[1:(nobs - 1), ])
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
@@ -29,7 +29,8 @@ calculate_portfolio_weights <- function(x, type = "tp", nboot, factors = NULL, r
   w_factor_bootparam <- factor_parametric_bootstrap(x, B = nboot, n_factors  = k, type, riskfree, lambda, factors = NULL) 
   w_factor_boot <- factor_bootstrap(x, B = nboot, n_factors  = k, type, riskfree, lambda, factors = NULL) 
   
-  model <- lm(as.matrix(x) ~ factors)
+  k <- ncol(factors)
+  model <- lm(as.matrix(x)[-1, ] ~ factors[1:(nobs - 1), ])
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
@@ -84,7 +85,7 @@ ef_portfolio <- function(mu, cov.mat, lambda) {
   N <- ncol(cov.mat)
   Dmat <- lambda*cov.mat
   dvec <- mu
-  Amat <- cbind(rep(1,N), diag(1,N))
+  Amat <- cbind(rep(1,N), diag(1, N))
   meq <- 1 
   bvec <- rbind(1, matrix(0, N, 1)) 
   weights <- quadprog::solve.QP(Dmat, dvec, Amat, bvec, meq)$solution
@@ -95,7 +96,7 @@ minvar_portfolio <- function(cov.mat) {
   N <- ncol(cov.mat)
   Dmat <- cov.mat
   dvec <- rep(0, N)
-  Amat <- cbind(rep(1,N), diag(1,N))
+  Amat <- cbind(rep(1,N), diag(1, N))
   meq <- 1 
   bvec <- rbind(1, matrix(0, N, 1)) 
   weights <- quadprog::solve.QP(Dmat, dvec, Amat, bvec, meq)$solution
@@ -117,16 +118,13 @@ medidas <- function(x, rf = 0.5) {
   return(output)
 }
 
-calculate_to_sspw <- function(previous_weights, desired_weights, oos_returns, p) {
-  l <- length(previous_weights)/p
-  to <- rep(NA, l)
-  sspw <- rep(NA, l)
-  for (k in 1:l) {
-    num <- previous_weights[(p*(k - 1) + 1):(p*k)]*(1 + oos_returns/100)
-    den <- sum(num)
-    updated_weights <- num/den
-    to[k] <- sum(abs(desired_weights[(p*(k - 1) + 1):(p*k)] - updated_weights))
-    sspw[k] <- sum(desired_weights[(p*(k - 1) + 1):(p*k)]^2)
-  }
-  return(list(to, sspw))
+calculate_turnover <- function(previous_weights, desired_weights, oos_previous) {
+  previous_weights[is.na(previous_weights)] <- 0
+  desired_weights[is.na(desired_weights)] <- 0
+  oos_previous[is.na(oos_previous)] <- 0
+  num <- previous_weights * (1 + oos_previous/100)
+  den <- sum(num)
+  updated_weights <- num/den
+  to <- sum(abs(desired_weights - updated_weights))
+  return(to)
 }
