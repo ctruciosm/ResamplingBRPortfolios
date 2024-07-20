@@ -2,7 +2,9 @@
 
 Reproducible code for the paper by Oliveira, Trucíos, and Valls (2024). The script `01_Empirical_Application_IBRX.R` replicates the tables in the paper.
 
-> Due to Economatica license restrictions, the data provided here cannot be used elsewhere and is made available only for reproducibility purposes.
+The function in the `covShrinkage` paste were obtained from https://github.com/MikeWolf007/covShrinkage.
+
+> Due to Economatica license, the data provided here cannot be used elsewhere and is made available only for reproducibility purposes.
 
 ## References
 
