@@ -1,0 +1,7 @@
+These notes pertain to the block.size.calibrate_.R and boot.time.inference_.R files. They contain modified versions of the original block.size.calibrate and boot.time.inference function definitions--- modified so as to implement parallel processing. The method of parallelization is "forking", which has the consequence that the code will not run under the Windows operating system as that OS does not support forking. The code is not extensively tested but should run on any sort of Linux/Unix system. The parallelization can only be of benefit if the computer has more than one CPU core. Certainly there would be no benefit with a computer having a single single-core CPU. But with eight hyper-threaded cores there is roughly an 8-fold reduction in runtime.
+
+Of the two parallelized functions it is by far and away block.size.calibrate_ (note the trailing underscore to indicate that it's modified) that brings about the greatest runtime reduction. It calls the original not-parallelized boot.time.inference function, thus that function must be retained. Optionally boot.time.inference_ as defined in boot.time.inference_.R may be run during the inference step as it will similarly reduce the processing time of that step in inverse proportion to the number of cores, but that step takes little time anyway so boot.time.inference_.R may be disregarded in favor of the original boot.time.inference function.
+
+-Mike O'Connor
+mike@mocpa.com
+www.mocpa.com

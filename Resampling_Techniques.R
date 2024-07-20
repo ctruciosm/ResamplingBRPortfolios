@@ -65,15 +65,15 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
     eigen_decomposition <- eigen(1/(nobs - 1) * t(x_c) %*% x_c)
     eigen_vectors <- matrix(t(eigen_decomposition$vectors[,1:n_factors]), nrow = n_factors)
     factors <- x %*% t(eigen_vectors)
-  } else {
-    n_factors <- ncol(factors)
   }
-  model <- lm(as.matrix(x)[-1, ] ~ factors[1:(nobs - 1), ])
+  n_factors <- ncol(factors)
+  
+  model <- lm(as.matrix(x)[-1, ] ~ as.matrix(factors[1:(nobs - 1), 1:n_factors]))
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
   Sigma_e_hat <- (1/model$df.residual) * t(epsilon_hat) %*% epsilon_hat
-  Sigma_F <- cov(matrix(factors, ncol = n_factors))
+  Sigma_F <- cov(matrix(factors[1:(nobs - 1), ], ncol = n_factors))
   w_boot <- matrix(NA, ncol = p, nrow = B)
   
   for (j in 1:B) {
@@ -88,6 +88,7 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
     Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
     Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
     w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
+    
     while (any(is.na(w_boot[j, ])) || any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       epsilon_boot <- rmvnorm(nobs - 1, rep(0,p), Sigma_e_hat)
       returns_boot <- matrix(rep(alpha_hat, nobs - 1), ncol = p, byrow = TRUE) + factors[1:(nobs - 1), ] %*% beta_hat + epsilon_boot
@@ -122,7 +123,7 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
-  Sigma_F <- cov(matrix(factors, ncol = n_factors))
+  Sigma_F <- cov(matrix(factors[1:(nobs - 1), ], ncol = n_factors))
   w_boot <- matrix(NA, ncol = p, nrow = B)
   
   for (j in 1:B) {

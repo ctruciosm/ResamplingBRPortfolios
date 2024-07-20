@@ -1,0 +1,14 @@
+ls()
+who
+who()
+parzen(4)
+parzen function(x)
+function parzen(x) 2x end
+parzen(3)
+whos()
+edit(parzen)
+parzen
+edit(parzen [])
+function parzen(x) 2x end
+edit(parzen)
+exit()
