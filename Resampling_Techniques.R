@@ -14,14 +14,14 @@ michaud_parametric_bootstrap <- function(x, B = 500, type = "tp", riskfree = 0.0
     returns_boot <- rmvnorm(nobs, mu_hat, Sigma_hat)
     mu_boot_hat <- colMeans(returns_boot)
     c_returns_boot <- scale(returns_boot, center = T, scale = F)
-    Sigma_boot_hat <- 1/(nobs - 1) * t(c_returns_boot) %*% c_returns_boot
+    Sigma_boot_hat <- cov(c_returns_boot)
     Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
     w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
     while (any(is.na(w_boot[j, ])) || any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       returns_boot <- rmvnorm(nobs, mu_hat, Sigma_hat)
       mu_boot_hat <- colMeans(returns_boot)
       c_returns_boot <- scale(returns_boot, center = T, scale = F)
-      Sigma_boot_hat <- 1/(nobs - 1) * t(c_returns_boot) %*% c_returns_boot
+      Sigma_boot_hat <- cov(c_returns_boot)
       Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
       w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
     }
@@ -40,14 +40,14 @@ michaud_bootstrap <- function(x, B = 500, type = "tp", riskfree = 0.005, lambda 
     returns_boot <- x[sample(1:nobs, nobs, replace = TRUE),]
     mu_boot_hat <- colMeans(returns_boot)
     c_returns_boot <- scale(returns_boot, center = T, scale = F)
-    Sigma_boot_hat <- 1/(nobs - 1) * t(c_returns_boot) %*% c_returns_boot
+    Sigma_boot_hat <- cov(c_returns_boot)
     Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
     w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
     while (any(is.na(w_boot[j, ])) || any(eigen(Sigma_boot_hat)$values <= 1e-08)) {
       returns_boot <- x[sample(1:nobs,nobs, replace = TRUE),]
       mu_boot_hat <- colMeans(returns_boot)
       c_returns_boot <- scale(returns_boot, center = T, scale = F)
-      Sigma_boot_hat <- 1/(nobs - 1) * t(c_returns_boot) %*% c_returns_boot
+      Sigma_boot_hat <- cov(c_returns_boot)
       Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
       w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
     }
@@ -62,7 +62,7 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
   p <- ncol(x)
   if (is.null(factors)) {
     x_c <- scale(x, center = TRUE, scale = FALSE)
-    eigen_decomposition <- eigen(1/(nobs - 1) * t(x_c) %*% x_c)
+    eigen_decomposition <- eigen(cov(x_c))
     eigen_vectors <- matrix(t(eigen_decomposition$vectors[,1:n_factors]), nrow = n_factors)
     factors <- x %*% t(eigen_vectors)
   }
@@ -72,8 +72,8 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
-  Sigma_e_hat <- (1/model$df.residual) * t(epsilon_hat) %*% epsilon_hat
-  Sigma_F <- cov(matrix(factors[1:(nobs - 1), ], ncol = n_factors))
+  Sigma_e_hat <- (1/model$df.residual) * (nobs - 2) * cov(epsilon_hat)
+  Sigma_F <- ifelse(n_factors == 1, var(factors[1:(nobs - 1), ]), cov(matrix(factors[1:(nobs - 1), ], ncol = n_factors)))
   w_boot <- matrix(NA, ncol = p, nrow = B)
   
   for (j in 1:B) {
@@ -84,7 +84,7 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
     beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
     epsilon_hat_boot <-  model_boot$residuals
     mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
-    Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
+    Sigma_e_boot_hat <- (1/model_boot$df.residual) * (nobs - 2) * cov(epsilon_hat_boot)
     Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
     Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
     w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
@@ -97,7 +97,7 @@ factor_parametric_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", 
       beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
       epsilon_hat_boot <-  model_boot$residuals
       mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
-      Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
+      Sigma_e_boot_hat <- (1/model_boot$df.residual) * (nobs - 2) * cov(epsilon_hat_boot)
       Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
       Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
       w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
@@ -113,7 +113,7 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
   p <- ncol(x)
   if (is.null(factors)) {
     x_c <- scale(x, center = TRUE, scale = FALSE)
-    eigen_decomposition <- eigen(1/(nobs - 1) * t(x_c) %*% x_c)
+    eigen_decomposition <- eigen(cov(x_c))
     eigen_vectors <- matrix(t(eigen_decomposition$vectors[,1:n_factors]), nrow = n_factors)
     factors <- x %*% t(eigen_vectors)
   } else {
@@ -123,7 +123,7 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
-  Sigma_F <- cov(matrix(factors[1:(nobs - 1), ], ncol = n_factors))
+  Sigma_F <- ifelse(n_factors == 1, var(factors[1:(nobs - 1), ]), cov(matrix(factors[1:(nobs - 1), ], ncol = n_factors)))
   w_boot <- matrix(NA, ncol = p, nrow = B)
   
   for (j in 1:B) {
@@ -134,7 +134,7 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
     beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
     epsilon_hat_boot <- model_boot$residuals
     mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
-    Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
+    Sigma_e_boot_hat <- (1/model_boot$df.residual) * (nobs - 2) * cov(epsilon_hat_boot)
     Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
     Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
     w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
@@ -146,7 +146,7 @@ factor_bootstrap <- function(x, B = 500, n_factors = 1, type = "tp", riskfree = 
       beta_hat_boot <- matrix(coef(model_boot)[-1, ], ncol = p)
       epsilon_hat_boot <- model_boot$residuals
       mu_boot_hat <- as.numeric(alpha_hat_boot + apply(matrix(factors[1:(nobs - 1), ], ncol = n_factors), 2, mean) %*% beta_hat_boot) 
-      Sigma_e_boot_hat <- (1/model_boot$df.residual) * t(epsilon_hat_boot) %*% epsilon_hat_boot
+      Sigma_e_boot_hat <- (1/model_boot$df.residual) * (nobs - 2) * cov(epsilon_hat_boot)
       Sigma_boot_hat <- t(beta_hat_boot) %*% Sigma_F %*% beta_hat_boot + Sigma_e_boot_hat
       Sigma_boot_hat <- 0.5*(Sigma_boot_hat + t(Sigma_boot_hat))
       w_boot[j, ] <- tryCatch({markowitz_optimization(type, mu = mu_boot_hat, Sigma = Sigma_boot_hat, risk.free = riskfree, lambda)}, warning = function(w) rep(NA, p), error = function(e) rep(NA, p)) 
