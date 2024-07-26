@@ -8,6 +8,7 @@ library(POET)
 library(Matrix)
 library(quadprog)
 library(readxl)
+library(ggplot2)
 library(kableExtra)
 library(dplyr)
 library(stringr)
@@ -69,6 +70,12 @@ ibovespa <- read_excel("Data/economatica_ibov.xlsx", skip = 3, na = c("-", "NA")
 colnames(ibovespa) <- str_replace(colnames(ibovespa), "Retorno\ndo fechamento\nem 1 meses\nEm moeda orig\najust p/ prov\n", "")
 
 
+#stocks %>% select(all_of(names(composition))) %>% 
+#  mutate_if(is.numeric, function(x) (x - lag(x) / lag(x))) %>% pivot_longer(cols = VALE3:WIZC3, values_to = "returns", names_to = "stock") %>% 
+#  ggplot() + geom_line(aes(x = dates, y = returns, color = stock)) + 
+#  theme(legend.position = "none")
+
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 #       General Settings       #  
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
@@ -82,7 +89,7 @@ lambda <- 2
 
 cov_shrinkages <- c(stats::cov, cov1Para, cov2Para, covCor, covDiag)
 for (s in 1:5) {
-  cov = cov_shrinkages[s]
+  cov_estim = cov_shrinkages[s][[1]]
   w_estim_mv = w_bootparam_mv = w_boot_mv = w_estim_pca_mv = w_factor_bootparam_pca_mv = w_factor_boot_pca_mv = w_estim_obs_mv = w_factor_bootparam_obs_mv = w_factor_boot_obs_mv = matrix(0, nrow = OoS, ncol = p, dimnames = list(NULL, colnames(stocks)[-1]))
   w_estim_ef = w_bootparam_ef = w_boot_ef = w_estim_pca_ef = w_factor_bootparam_pca_ef = w_factor_boot_pca_ef = w_estim_obs_ef = w_factor_bootparam_obs_ef = w_factor_boot_obs_ef = matrix(0, nrow = OoS, ncol = p, dimnames = list(NULL, colnames(stocks)[-1]))
   w_ew_full <- matrix(0, nrow = OoS, ncol = p, dimnames = list(NULL, colnames(stocks)[-1]))
@@ -169,13 +176,13 @@ for (s in 1:5) {
                        "ef_Markowitz", "ef_MichaudParam", "ef_MichaudNonP", 
                        "ef_MarkowitzPCA", "ef_FactorParamPCA", "ef_FactorNonPPCA", 
                        "ef_MarkowitzObs", "ef_FactorParamObs", "ef_FactorNonPObc")
-  write.table(Rport, paste0("Results/Rport_2_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
+  write.table(Rport, paste0("Results/Rport_05_1_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
   
-  colnames(to) <- colnames(Rport) 
-  write.table(to, paste0("Results/to_2_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
+  #colnames(to) <- colnames(Rport) 
+  #write.table(to, paste0("Results/to_2_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
   
-  colnames(sspw) <- colnames(Rport) 
-  write.table(sspw, paste0("Results/sspw_2_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
+  #colnames(sspw) <- colnames(Rport) 
+  #write.table(sspw, paste0("Results/sspw_2_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
   
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   #    Tables in Latex style     #  
