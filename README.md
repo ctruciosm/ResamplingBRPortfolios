@@ -14,7 +14,7 @@ The function in the `covShrinkage` paste were obtained from https://github.com/M
 **Obs:**
 After conducting the empirical application, we decided to name the methods Linear Shrinkage 1, 2, 3, and 4 based on the dates they were published. Thus:
 
-| Text Files | Paper       |
+| Text Files in `Results` | Paper       |
 |:----------:|:-----------:|
 | ls_0       | Sample covariance  |
 | ls_1       | Linear Shrinkage 4 |
