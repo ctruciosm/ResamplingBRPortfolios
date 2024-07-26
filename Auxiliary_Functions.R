@@ -5,17 +5,18 @@ ir <- function(x) {
   mean(x)/sd(x)
 }
 
+
 calculate_portfolio_weights <- function(x, type = "tp", nboot, factors = NULL, riskfree = 0.005, lambda = 2) {
   nobs <- nrow(x)
   p <- ncol(x)
   
-  w_estim <- markowitz_optimization(type, mu = colMeans(x), Sigma = cov(x), risk.free = riskfree, lambda)
+  w_estim <- markowitz_optimization(type, mu = colMeans(x), Sigma = cov_estim(x), risk.free = riskfree, lambda)
   w_bootparam <- michaud_parametric_bootstrap(x, B = nboot, type, riskfree, lambda)
   w_boot <- michaud_bootstrap(x, B = nboot, type, riskfree, lambda) 
   
   k <- POETKhat(t(x))$K1HL
   x_c <- scale(x, center = TRUE, scale = FALSE)
-  eigen_decomposition <- eigen(1/(nobs - 1) * t(x_c) %*% x_c)
+  eigen_decomposition <- eigen(cov_estim(x_c))
   eigen_vectors <- matrix(t(eigen_decomposition$vectors[,1:k]), nrow = k)
   pca_factors <- x %*% t(eigen_vectors)
 
@@ -23,8 +24,8 @@ calculate_portfolio_weights <- function(x, type = "tp", nboot, factors = NULL, r
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
-  Sigma_e_hat <- (1/model$df.residual) * t(epsilon_hat) %*% epsilon_hat
-  Sigma_F <- cov(matrix(head(pca_factors, nobs - 1), ncol = k))
+  Sigma_e_hat <- (1/model$df.residual) * (nobs - 2) * cov_estim(epsilon_hat)
+  Sigma_F <- ifelse(k == 1, var(pca_factors[1:(nobs - 1)]), cov_estim(matrix(head(pca_factors, nobs - 1), ncol = k)))
   Sigma_hat <- t(beta_hat) %*% Sigma_F %*% beta_hat + Sigma_e_hat
   mu_hat <- as.numeric(alpha_hat + apply(matrix(head(pca_factors, nobs - 1), ncol = k), 2, mean) %*% beta_hat) 
   w_estim_pca <- markowitz_optimization(type, mu = mu_hat, Sigma = Sigma_hat, risk.free = riskfree, lambda)
@@ -36,8 +37,8 @@ calculate_portfolio_weights <- function(x, type = "tp", nboot, factors = NULL, r
   alpha_hat <- coef(model)[1,]
   beta_hat <- matrix(coef(model)[-1, ], ncol = p)
   epsilon_hat <-  model$residuals
-  Sigma_e_hat <- (1/model$df.residual) * t(epsilon_hat) %*% epsilon_hat
-  Sigma_F <- cov(matrix(head(factors, nobs - 1), ncol = k))
+  Sigma_e_hat <- (1/model$df.residual) * (nobs - 2) * cov_estim(epsilon_hat)
+  Sigma_F <- ifelse(k == 1, var(factors[1:(nobs - 1)]), cov_estim(matrix(head(factors, nobs - 1), ncol = k)))
   Sigma_hat <- t(beta_hat) %*% Sigma_F %*% beta_hat + Sigma_e_hat
   mu_hat <- as.numeric(alpha_hat + apply(matrix(head(factors, nobs - 1), ncol = k), 2, mean) %*% beta_hat) 
   w_estim_observed <- markowitz_optimization(type, mu = mu_hat, Sigma = Sigma_hat, risk.free = riskfree, lambda)
