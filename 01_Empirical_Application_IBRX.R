@@ -79,7 +79,7 @@ colnames(ibovespa) <- str_replace(colnames(ibovespa), "Retorno\ndo fechamento\ne
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 #       General Settings       #  
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-InS <- 120
+InS <- 90 #120
 OoS <- nrow(stocks) - InS
 p <- ncol(stocks) - 1
 nboot <- 500
@@ -176,7 +176,7 @@ for (s in 1:5) {
                        "ef_Markowitz", "ef_MichaudParam", "ef_MichaudNonP", 
                        "ef_MarkowitzPCA", "ef_FactorParamPCA", "ef_FactorNonPPCA", 
                        "ef_MarkowitzObs", "ef_FactorParamObs", "ef_FactorNonPObc")
-  write.table(Rport, paste0("Results/Rport_05_1_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
+  write.table(Rport, paste0("Results/Rport_2_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
   
   #colnames(to) <- colnames(Rport) 
   #write.table(to, paste0("Results/to_2_", InS, "_ls_", s - 1, "_ibrx.csv"), sep = ",")
